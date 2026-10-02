@@ -236,6 +236,10 @@ function renderDashboard(){
   $("income").textContent=money(income);
   $("expenses").textContent=money(expenses);
 
+
+renderExpensesChart(transactions);
+  
+
   const by={};
   mt.filter(t=>t.type==="expense").forEach(t=>by[t.category||"Outros"]=(by[t.category||"Outros"]||0)+Number(t.amount));
   const entries=Object.entries(by).sort((a,b)=>b[1]-a[1]);
