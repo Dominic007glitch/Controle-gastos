@@ -11,9 +11,82 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
+
+let expensesChart = null;
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+
+
+
+function renderExpensesChart(transactions) {
+    const canvas = document.getElementById("expensesChart");
+
+    if (!canvas) return;
+
+    const expenses = transactions.filter(transaction => {
+        return transaction.type === "expense";
+    });
+
+    const categoryTotals = {};
+
+    expenses.forEach(transaction => {
+        const category = transaction.category || "Outros";
+        const amount = Number(transaction.amount) || 0;
+
+        if (!categoryTotals[category]) {
+            categoryTotals[category] = 0;
+        }
+
+        categoryTotals[category] += amount;
+    });
+
+    const labels = Object.keys(categoryTotals);
+    const values = Object.values(categoryTotals);
+
+    if (expensesChart) {
+        expensesChart.destroy();
+    }
+
+    expensesChart = new Chart(canvas, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    data: values
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: "bottom"
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+
+                            return " R$ " + value.toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+
 
 const defaultCategories = [
   "Alimentação","Roupas","Acessórios","Moto","Transporte","Lazer",
