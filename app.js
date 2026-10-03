@@ -6,7 +6,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendPasswordResetEmail as resetPassword
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
 import {
@@ -32,15 +33,48 @@ import { firebaseConfig } from "./firebase-config.js";
    FIREBASE
 ========================================================= */
 
-let expensesChart = null;
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 
 /* =========================================================
-   UTILITÁRIOS
+   VARIÁVEIS
+========================================================= */
+
+let expensesChart = null;
+
+const defaultCategories = [
+  "Alimentação",
+  "Roupas",
+  "Acessórios",
+  "Moto",
+  "Transporte",
+  "Lazer",
+  "Tecnologia",
+  "Casa",
+  "Estudos",
+  "Saúde",
+  "Contas",
+  "Outros"
+];
+
+let user = null;
+
+let transactions = [];
+let categories = [];
+let goals = [];
+let fixedExpenses = [];
+
+let unsubscribers = [];
+
+let currentPage = "dashboard";
+
+let selectedMonth = new Date().toISOString().slice(0, 7);
+
+
+/* =========================================================
+   HELPERS
 ========================================================= */
 
 const $ = id => document.getElementById(id);
@@ -73,11 +107,13 @@ function escapeHtml(s) {
 
 
 function showToast(msg, type = "ok") {
+
   const el = $("toast");
 
   if (!el) return;
 
   el.textContent = msg;
+
   el.className = `toast show ${type}`;
 
   setTimeout(() => {
@@ -87,6 +123,7 @@ function showToast(msg, type = "ok") {
 
 
 function setLoading(show) {
+
   const loading = $("loading");
 
   if (!loading) return;
@@ -95,84 +132,66 @@ function setLoading(show) {
 }
 
 
-function openModal(id) {
-  const modal = $(id);
-
-  if (modal) {
-    modal.classList.remove("hidden");
-  }
-}
-
-
-function closeModal(modal) {
-  if (modal) {
-    modal.classList.add("hidden");
-  }
-}
-
-
-function closeAllModals() {
-  document
-    .querySelectorAll(".modal")
-    .forEach(modal => modal.classList.add("hidden"));
-}
-
-
-/* =========================================================
-   VARIÁVEIS
-========================================================= */
-
-const defaultCategories = [
-  "Alimentação",
-  "Roupas",
-  "Acessórios",
-  "Moto",
-  "Transporte",
-  "Lazer",
-  "Tecnologia",
-  "Casa",
-  "Estudos",
-  "Saúde",
-  "Contas",
-  "Outros"
-];
-
-let user = null;
-
-let transactions = [];
-let categories = [];
-let goals = [];
-let fixedExpenses = [];
-
-let unsubscribers = [];
-
-let currentPage = "dashboard";
-
-let selectedMonth =
-  new Date().toISOString().slice(0, 7);
-
-
-/* =========================================================
-   FIRESTORE REFERÊNCIAS
-========================================================= */
-
 function userRef() {
-  return doc(db, "users", user.uid);
+
+  return doc(
+    db,
+    "users",
+    user.uid
+  );
+
 }
 
 
 function sub(name) {
+
   return collection(
     db,
     "users",
     user.uid,
     name
   );
+
 }
 
 
 /* =========================================================
-   AUTENTICAÇÃO
+   MODAIS
+========================================================= */
+
+function openModal(id) {
+
+  const modal = $(id);
+
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+
+}
+
+
+function closeModal(modal) {
+
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+
+}
+
+
+function closeAllModals() {
+
+  document
+    .querySelectorAll(".modal")
+    .forEach(modal => {
+      modal.classList.add("hidden");
+    });
+
+}
+
+
+/* =========================================================
+   AUTH
 ========================================================= */
 
 function renderAuthTab(tab) {
@@ -180,29 +199,41 @@ function renderAuthTab(tab) {
   document
     .querySelectorAll(".auth-tabs .tab")
     .forEach(button => {
+
       button.classList.toggle(
         "active",
         button.dataset.authTab === tab
       );
+
     });
 
+
   if ($("loginForm")) {
+
     $("loginForm").classList.toggle(
       "hidden",
       tab !== "login"
     );
+
   }
 
+
   if ($("registerForm")) {
+
     $("registerForm").classList.toggle(
       "hidden",
       tab !== "register"
     );
+
   }
 
+
   if ($("authMessage")) {
+
     $("authMessage").textContent = "";
+
   }
+
 }
 
 
@@ -227,6 +258,7 @@ function firebaseError(e) {
 
     "auth/network-request-failed":
       "Sem conexão com a internet."
+
   };
 
   return (
@@ -234,6 +266,7 @@ function firebaseError(e) {
     e.message ||
     "Ocorreu um erro."
   );
+
 }
 
 
@@ -249,326 +282,27 @@ async function ensureProfile() {
 
   if (!snap.exists()) {
 
-    await setDoc(ref, {
-      name: user.displayName || "Usuário",
-      email: user.email,
-      createdAt: serverTimestamp()
-    });
-
-  }
-}
-
-
-/* =========================================================
-   LOGIN / LOGOUT
-========================================================= */
-
-onAuthStateChanged(auth, async u => {
-
-  setLoading(true);
-
-  try {
-
-    if (u) {
-
-      user = u;
-
-      await ensureProfile();
-
-      if ($("authView")) {
-        $("authView").classList.add("hidden");
+    await setDoc(
+      ref,
+      {
+        name: user.displayName || "Usuário",
+        email: user.email,
+        createdAt: serverTimestamp()
       }
-
-      if ($("appView")) {
-        $("appView").classList.remove("hidden");
-      }
-
-      if ($("userMini")) {
-
-        $("userMini").innerHTML = `
-          <strong>
-            ${escapeHtml(u.displayName || "Usuário")}
-          </strong>
-
-          <small>
-            ${escapeHtml(u.email || "")}
-          </small>
-        `;
-
-      }
-
-      if ($("welcomeText")) {
-        $("welcomeText").textContent =
-          `Olá, ${u.displayName || "usuário"}!`;
-      }
-
-      if ($("accountInfo")) {
-        $("accountInfo").textContent =
-          `Conta: ${u.email}`;
-      }
-
-      if (
-        $("monthFilter") &&
-        !$("monthFilter").value
-      ) {
-        $("monthFilter").value =
-          selectedMonth;
-      }
-
-
-      /*
-        Tela inicial de escolha
-      */
-
-      if ($("homeView")) {
-
-        $("homeView").classList.remove(
-          "hidden"
-        );
-
-      }
-
-
-      /*
-        Nenhuma página financeira aberta
-      */
-
-      document
-        .querySelectorAll(".page")
-        .forEach(page => {
-          page.classList.add("hidden");
-        });
-
-
-      /*
-        Começa a escutar os dados
-      */
-
-      listenData();
-
-    } else {
-
-      user = null;
-
-      transactions = [];
-      goals = [];
-      categories = [];
-      fixedExpenses = [];
-
-
-      if ($("appView")) {
-        $("appView").classList.add("hidden");
-      }
-
-      if ($("authView")) {
-        $("authView").classList.remove("hidden");
-      }
-
-      if ($("homeView")) {
-        $("homeView").classList.add("hidden");
-      }
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao iniciar o sistema:",
-      error
     );
 
-  } finally {
-
-    /*
-      MUITO IMPORTANTE:
-      sempre tira a tela de carregamento.
-    */
-
-    setLoading(false);
-
   }
 
-});
-
-
-/* =========================================================
-   FORMULÁRIO DE LOGIN
-========================================================= */
-
-if ($("loginForm")) {
-
-  $("loginForm").addEventListener(
-    "submit",
-    async e => {
-
-      e.preventDefault();
-
-      $("authMessage").textContent =
-        "Entrando...";
-
-      try {
-
-        await signInWithEmailAndPassword(
-          auth,
-          $("loginEmail").value,
-          $("loginPassword").value
-        );
-
-      } catch (err) {
-
-        $("authMessage").textContent =
-          firebaseError(err);
-
-      }
-
-    }
-  );
-
 }
 
 
 /* =========================================================
-   CADASTRO
-========================================================= */
-
-if ($("registerForm")) {
-
-  $("registerForm").addEventListener(
-    "submit",
-    async e => {
-
-      e.preventDefault();
-
-      $("authMessage").textContent =
-        "Criando conta...";
-
-      try {
-
-        const cred =
-          await createUserWithEmailAndPassword(
-            auth,
-            $("registerEmail").value,
-            $("registerPassword").value
-          );
-
-        await setDoc(
-          doc(
-            db,
-            "users",
-            cred.user.uid
-          ),
-          {
-            name:
-              $("registerName")
-                .value
-                .trim(),
-
-            email:
-              cred.user.email,
-
-            createdAt:
-              serverTimestamp()
-          }
-        );
-
-      } catch (err) {
-
-        $("authMessage").textContent =
-          firebaseError(err);
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   RECUPERAR SENHA
-========================================================= */
-
-if ($("forgotPassword")) {
-
-  $("forgotPassword").onclick =
-    async () => {
-
-      const email =
-        $("loginEmail").value.trim();
-
-      if (!email) {
-
-        $("authMessage").textContent =
-          "Digite seu e-mail primeiro.";
-
-        return;
-      }
-
-      try {
-
-        await sendPasswordResetEmail(
-          auth,
-          email
-        );
-
-        $("authMessage").textContent =
-          "E-mail de recuperação enviado.";
-
-      } catch (e) {
-
-        $("authMessage").textContent =
-          firebaseError(e);
-
-      }
-
-    };
-
-}
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-if ($("logoutBtn")) {
-
-  $("logoutBtn").onclick =
-    () => signOut(auth);
-
-}
-
-
-/* =========================================================
-   ABAS DE LOGIN / CADASTRO
-========================================================= */
-
-document
-  .querySelectorAll("[data-auth-tab]")
-  .forEach(button => {
-
-    button.onclick = () =>
-      renderAuthTab(
-        button.dataset.authTab
-      );
-
-  });
-
-
-/* =========================================================
-   FIRESTORE — ESCUTAR DADOS
+   FIRESTORE
 ========================================================= */
 
 function listenData() {
 
-  unsubscribers.forEach(fn => {
-
-    try {
-      fn();
-    } catch (e) {
-      console.error(e);
-    }
-
-  });
+  unsubscribers.forEach(fn => fn());
 
   unsubscribers = [];
 
@@ -611,43 +345,30 @@ function listenData() {
         );
 
 
-        /*
-          Se houver problema com orderBy,
-          tenta carregar sem ordenação.
-        */
+        const fallback = onSnapshot(
+          sub(name),
 
-        const fallback =
-          onSnapshot(
-            sub(name),
+          snapshot => {
 
-            snapshot => {
+            setter(
+              snapshot.docs.map(
+                d => ({
+                  id: d.id,
+                  ...d.data()
+                })
+              )
+            );
 
-              setter(
-                snapshot.docs.map(
-                  d => ({
-                    id: d.id,
-                    ...d.data()
-                  })
-                )
-              );
+            renderAll();
 
-              renderAll();
+          }
 
-            },
-
-            fallbackError => {
-
-              console.error(
-                `Erro no fallback de ${name}:`,
-                fallbackError
-              );
-
-            }
-          );
+        );
 
         unsubscribers.push(fallback);
 
       }
+
     );
 
     unsubscribers.push(unsub);
@@ -660,10 +381,12 @@ function listenData() {
     value => transactions = value
   );
 
+
   listen(
     "goals",
     value => goals = value
   );
+
 
   listen(
     "fixedExpenses",
@@ -671,110 +394,445 @@ function listenData() {
   );
 
 
-  const catUnsub =
-    onSnapshot(
-      sub("categories"),
+  const categoryUnsub = onSnapshot(
+    sub("categories"),
 
-      snapshot => {
+    snapshot => {
 
-        categories =
-          snapshot.docs.map(
-            d => ({
-              id: d.id,
-              ...d.data()
-            })
-          );
-
-        if (!categories.length) {
-          seedCategories();
-        }
-
-        renderAll();
-
-      },
-
-      error => {
-        console.error(
-          "Erro ao carregar categorias:",
-          error
+      categories =
+        snapshot.docs.map(
+          d => ({
+            id: d.id,
+            ...d.data()
+          })
         );
+
+
+      if (!categories.length) {
+
+        seedCategories();
+
       }
-    );
 
 
-  unsubscribers.push(catUnsub);
+      renderAll();
+
+    }
+
+  );
+
+
+  unsubscribers.push(
+    categoryUnsub
+  );
 
 }
 
-
-/* =========================================================
-   CATEGORIAS PADRÃO
-========================================================= */
 
 async function seedCategories() {
 
   if (!user) return;
 
-  try {
 
-    const batch =
-      writeBatch(db);
+  const batch = writeBatch(db);
 
-    defaultCategories.forEach(
-      name => {
 
-        batch.set(
+  defaultCategories.forEach(
+    name => {
+
+      batch.set(
+        doc(sub("categories")),
+        {
+          name,
+          createdAt: serverTimestamp()
+        }
+      );
+
+    }
+  );
+
+
+  await batch.commit();
+
+}
+
+
+/* =========================================================
+   LOGIN / LOGOUT
+========================================================= */
+
+onAuthStateChanged(
+  auth,
+  async u => {
+
+    setLoading(true);
+
+
+    try {
+
+      if (u) {
+
+        user = u;
+
+
+        await ensureProfile();
+
+
+        if ($("authView")) {
+
+          $("authView")
+            .classList
+            .add("hidden");
+
+        }
+
+
+        if ($("appView")) {
+
+          $("appView")
+            .classList
+            .remove("hidden");
+
+        }
+
+
+        if ($("userMini")) {
+
+          $("userMini").innerHTML = `
+            <strong>
+              ${escapeHtml(
+                u.displayName ||
+                "Usuário"
+              )}
+            </strong>
+
+            <small>
+              ${escapeHtml(
+                u.email || ""
+              )}
+            </small>
+          `;
+
+        }
+
+
+        if ($("welcomeText")) {
+
+          $("welcomeText").textContent =
+            `Olá, ${u.displayName || "usuário"}!`;
+
+        }
+
+
+        if ($("accountInfo")) {
+
+          $("accountInfo").textContent =
+            `Conta: ${u.email}`;
+
+        }
+
+
+        if ($("monthFilter")) {
+
+          if (!$("monthFilter").value) {
+
+            $("monthFilter").value =
+              selectedMonth;
+
+          }
+
+        }
+
+
+        /*
+          Depois do login:
+          mostra somente a tela de escolha.
+        */
+
+        if ($("homeView")) {
+
+          $("homeView")
+            .classList
+            .remove("hidden");
+
+        }
+
+
+        document
+          .querySelectorAll(".page")
+          .forEach(page => {
+
+            page.classList.add("hidden");
+
+          });
+
+
+        closeMobileMenu();
+
+
+        listenData();
+
+
+      } else {
+
+        user = null;
+
+        transactions = [];
+        goals = [];
+        categories = [];
+        fixedExpenses = [];
+
+
+        if ($("appView")) {
+
+          $("appView")
+            .classList
+            .add("hidden");
+
+        }
+
+
+        if ($("authView")) {
+
+          $("authView")
+            .classList
+            .remove("hidden");
+
+        }
+
+
+        if ($("homeView")) {
+
+          $("homeView")
+            .classList
+            .add("hidden");
+
+        }
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao iniciar o sistema:",
+        error
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   FORM LOGIN
+========================================================= */
+
+if ($("loginForm")) {
+
+  $("loginForm").addEventListener(
+    "submit",
+    async e => {
+
+      e.preventDefault();
+
+      $("authMessage").textContent =
+        "Entrando...";
+
+
+      try {
+
+        await signInWithEmailAndPassword(
+          auth,
+          $("loginEmail").value,
+          $("loginPassword").value
+        );
+
+      } catch (err) {
+
+        $("authMessage").textContent =
+          firebaseError(err);
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FORM CADASTRO
+========================================================= */
+
+if ($("registerForm")) {
+
+  $("registerForm").addEventListener(
+    "submit",
+    async e => {
+
+      e.preventDefault();
+
+      $("authMessage").textContent =
+        "Criando conta...";
+
+
+      try {
+
+        const cred =
+          await createUserWithEmailAndPassword(
+            auth,
+            $("registerEmail").value,
+            $("registerPassword").value
+          );
+
+
+        await setDoc(
           doc(
-            sub("categories")
+            db,
+            "users",
+            cred.user.uid
           ),
+
           {
-            name,
+            name:
+              $("registerName")
+                .value
+                .trim(),
+
+            email:
+              cred.user.email,
+
             createdAt:
               serverTimestamp()
           }
         );
 
+
+      } catch (err) {
+
+        $("authMessage").textContent =
+          firebaseError(err);
+
       }
-    );
 
-    await batch.commit();
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao criar categorias:",
-      error
-    );
-
-  }
+    }
+  );
 
 }
+
+
+/* =========================================================
+   RECUPERAR SENHA
+========================================================= */
+
+if ($("forgotPassword")) {
+
+  $("forgotPassword").onclick =
+    async () => {
+
+      const email =
+        $("loginEmail")
+          .value
+          .trim();
+
+
+      if (!email) {
+
+        $("authMessage").textContent =
+          "Digite seu e-mail primeiro.";
+
+        return;
+
+      }
+
+
+      try {
+
+        await sendPasswordResetEmail(
+          auth,
+          email
+        );
+
+
+        $("authMessage").textContent =
+          "E-mail de recuperação enviado.";
+
+      } catch (e) {
+
+        $("authMessage").textContent =
+          firebaseError(e);
+
+      }
+
+    };
+
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+if ($("logoutBtn")) {
+
+  $("logoutBtn").onclick =
+    () => signOut(auth);
+
+}
+
+
+/* =========================================================
+   ABAS DE LOGIN
+========================================================= */
+
+document
+  .querySelectorAll("[data-auth-tab]")
+  .forEach(button => {
+
+    button.onclick = () =>
+      renderAuthTab(
+        button.dataset.authTab
+      );
+
+  });
 
 
 /* =========================================================
    FINANCEIRO
 ========================================================= */
 
-function getTypeLabel(t) {
+function getTypeLabel(type) {
 
   return {
+
     income: "Entrada",
+
     expense: "Gasto",
+
     save: "Guardou",
-    withdraw: "Retirou da reserva"
-  }[t] || t;
+
+    withdraw:
+      "Retirou da reserva"
+
+  }[type] || type;
 
 }
 
 
-function signedAmount(t, v) {
+function signedAmount(type, value) {
 
   return (
-    t === "income" ||
-    t === "withdraw"
+    type === "income" ||
+    type === "withdraw"
   )
-    ? Number(v)
-    : -Number(v);
+    ? Number(value)
+    : -Number(value);
 
 }
 
@@ -793,15 +851,38 @@ function monthTransactions() {
 function totalSaved() {
 
   return transactions.reduce(
-    (a, t) =>
-      a +
-      (
-        t.type === "save"
-          ? Number(t.amount)
-          : t.type === "withdraw"
-            ? -Number(t.amount)
-            : 0
-      ),
+    (total, transaction) => {
+
+      if (
+        transaction.type ===
+        "save"
+      ) {
+
+        return total +
+          Number(
+            transaction.amount
+          );
+
+      }
+
+
+      if (
+        transaction.type ===
+        "withdraw"
+      ) {
+
+        return total -
+          Number(
+            transaction.amount
+          );
+
+      }
+
+
+      return total;
+
+    },
+
     0
   );
 
@@ -811,12 +892,16 @@ function totalSaved() {
 function totalBalance() {
 
   return transactions.reduce(
-    (a, t) =>
-      a +
-      signedAmount(
-        t.type,
-        t.amount
-      ),
+    (total, transaction) => {
+
+      return total +
+        signedAmount(
+          transaction.type,
+          transaction.amount
+        );
+
+    },
+
     0
   );
 
@@ -829,169 +914,15 @@ function totalBalance() {
 
 function renderAll() {
 
-  /*
-    Só renderiza se os elementos
-    realmente existirem no HTML.
-  */
-
   renderDashboard();
+
   renderTransactions();
+
   renderGoals();
+
   renderSettings();
+
   populateCategories();
-
-}
-
-
-/* =========================================================
-   GRÁFICO DE GASTOS
-========================================================= */
-
-function renderExpensesChart(
-  transactionList
-) {
-
-  const canvas =
-    $("expensesChart");
-
-  if (!canvas) return;
-
-
-  const expenses =
-    transactionList.filter(
-      transaction =>
-        transaction.type ===
-        "expense"
-    );
-
-
-  const categoryTotals = {};
-
-
-  expenses.forEach(
-    transaction => {
-
-      const category =
-        transaction.category ||
-        "Outros";
-
-      const amount =
-        Number(
-          transaction.amount
-        ) || 0;
-
-      if (
-        !categoryTotals[category]
-      ) {
-        categoryTotals[category] = 0;
-      }
-
-      categoryTotals[category] +=
-        amount;
-
-    }
-  );
-
-
-  const labels =
-    Object.keys(
-      categoryTotals
-    );
-
-  const values =
-    Object.values(
-      categoryTotals
-    );
-
-
-  if (expensesChart) {
-
-    expensesChart.destroy();
-
-    expensesChart = null;
-
-  }
-
-
-  /*
-    Chart.js pode não estar carregado.
-    Não deixa isso quebrar o site.
-  */
-
-  if (
-    typeof Chart ===
-    "undefined"
-  ) {
-
-    console.warn(
-      "Chart.js não foi carregado."
-    );
-
-    return;
-
-  }
-
-
-  expensesChart =
-    new Chart(
-      canvas,
-      {
-        type: "doughnut",
-
-        data: {
-          labels,
-
-          datasets: [
-            {
-              data: values
-            }
-          ]
-        },
-
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-
-          plugins: {
-
-            legend: {
-              position: "bottom"
-            },
-
-            tooltip: {
-
-              callbacks: {
-
-                label:
-                  function(context) {
-
-                    const value =
-                      context.raw;
-
-                    return (
-                      " R$ " +
-                      Number(value)
-                        .toLocaleString(
-                          "pt-BR",
-                          {
-                            minimumFractionDigits:
-                              2
-                          }
-                        )
-                    );
-
-                  }
-
-              }
-
-            }
-
-          }
-
-        }
-
-      }
-    );
 
 }
 
@@ -1002,9 +933,6 @@ function renderExpensesChart(
 
 function renderDashboard() {
 
-  if (!$("balance")) return;
-
-
   const mt =
     monthTransactions();
 
@@ -1012,11 +940,13 @@ function renderDashboard() {
   const income =
     mt
       .filter(
-        t => t.type === "income"
+        t =>
+          t.type === "income"
       )
       .reduce(
         (a, t) =>
-          a + Number(t.amount),
+          a +
+          Number(t.amount),
         0
       );
 
@@ -1024,31 +954,50 @@ function renderDashboard() {
   const expenses =
     mt
       .filter(
-        t => t.type === "expense"
+        t =>
+          t.type === "expense"
       )
       .reduce(
         (a, t) =>
-          a + Number(t.amount),
+          a +
+          Number(t.amount),
         0
       );
 
 
-  $("balance").textContent =
-    money(totalBalance());
+  if ($("balance")) {
 
-  $("saved").textContent =
-    money(totalSaved());
+    $("balance").textContent =
+      money(totalBalance());
 
-  $("income").textContent =
-    money(income);
-
-  $("expenses").textContent =
-    money(expenses);
+  }
 
 
-  renderExpensesChart(
-    transactions
-  );
+  if ($("saved")) {
+
+    $("saved").textContent =
+      money(totalSaved());
+
+  }
+
+
+  if ($("income")) {
+
+    $("income").textContent =
+      money(income);
+
+  }
+
+
+  if ($("expenses")) {
+
+    $("expenses").textContent =
+      money(expenses);
+
+  }
+
+
+  renderExpensesChart(mt);
 
 
   const by = {};
@@ -1056,23 +1005,21 @@ function renderDashboard() {
 
   mt
     .filter(
-      t => t.type === "expense"
+      t =>
+        t.type === "expense"
     )
-    .forEach(
-      t => {
+    .forEach(t => {
 
-        const category =
-          t.category ||
-          "Outros";
+      const category =
+        t.category ||
+        "Outros";
 
-        by[category] =
-          (
-            by[category] || 0
-          ) +
-          Number(t.amount);
 
-      }
-    );
+      by[category] =
+        (by[category] || 0) +
+        Number(t.amount);
+
+    });
 
 
   const entries =
@@ -1096,10 +1043,12 @@ function renderDashboard() {
 
         ? entries
             .map(
-              ([name, val]) => {
+              ([name, value]) => {
 
                 const max =
-                  entries[0][1] || 1;
+                  entries[0][1] ||
+                  1;
+
 
                 return `
                   <div class="bar-row">
@@ -1110,16 +1059,21 @@ function renderDashboard() {
                       </span>
 
                       <strong>
-                        ${money(val)}
+                        ${money(value)}
                       </strong>
                     </div>
 
                     <div class="bar">
                       <i
-                        style="width:${Math.max(
-                          3,
-                          val / max * 100
-                        )}%"
+                        style="
+                          width:
+                          ${Math.max(
+                            3,
+                            value /
+                            max *
+                            100
+                          )}%
+                        "
                       ></i>
                     </div>
 
@@ -1138,11 +1092,13 @@ function renderDashboard() {
   const savedThis =
     mt
       .filter(
-        t => t.type === "save"
+        t =>
+          t.type === "save"
       )
       .reduce(
         (a, t) =>
-          a + Number(t.amount),
+          a +
+          Number(t.amount),
         0
       );
 
@@ -1166,14 +1122,20 @@ function renderDashboard() {
       </div>
 
       <div>
-        <span>Guardado neste mês</span>
+        <span>
+          Guardado neste mês
+        </span>
+
         <strong>
           ${money(savedThis)}
         </strong>
       </div>
 
       <div>
-        <span>Resultado do mês</span>
+        <span>
+          Resultado do mês
+        </span>
+
         <strong>
           ${money(
             income -
@@ -1221,6 +1183,175 @@ function renderDashboard() {
 
 
 /* =========================================================
+   GRÁFICO
+========================================================= */
+
+function renderExpensesChart(
+  transactionList
+) {
+
+  const canvas =
+    document.getElementById(
+      "expensesChart"
+    );
+
+
+  if (!canvas) return;
+
+
+  const expenses =
+    transactionList.filter(
+      transaction =>
+        transaction.type ===
+        "expense"
+    );
+
+
+  const categoryTotals = {};
+
+
+  expenses.forEach(
+    transaction => {
+
+      const category =
+        transaction.category ||
+        "Outros";
+
+
+      const amount =
+        Number(
+          transaction.amount
+        ) || 0;
+
+
+      if (
+        !categoryTotals[
+          category
+        ]
+      ) {
+
+        categoryTotals[
+          category
+        ] = 0;
+
+      }
+
+
+      categoryTotals[
+        category
+      ] += amount;
+
+    }
+  );
+
+
+  const labels =
+    Object.keys(
+      categoryTotals
+    );
+
+
+  const values =
+    Object.values(
+      categoryTotals
+    );
+
+
+  if (expensesChart) {
+
+    expensesChart.destroy();
+
+  }
+
+
+  if (
+    typeof Chart ===
+    "undefined"
+  ) {
+
+    return;
+
+  }
+
+
+  expensesChart =
+    new Chart(
+      canvas,
+      {
+
+        type: "doughnut",
+
+        data: {
+
+          labels,
+
+          datasets: [
+
+            {
+              data: values
+            }
+
+          ]
+
+        },
+
+        options: {
+
+          responsive: true,
+
+          maintainAspectRatio:
+            false,
+
+          plugins: {
+
+            legend: {
+
+              position:
+                "bottom"
+
+            },
+
+            tooltip: {
+
+              callbacks: {
+
+                label:
+                  function(
+                    context
+                  ) {
+
+                    const value =
+                      context.raw;
+
+
+                    return (
+                      " R$ " +
+                      value.toLocaleString(
+                        "pt-BR",
+                        {
+                          minimumFractionDigits:
+                            2
+                        }
+                      )
+                    );
+
+                  }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+    );
+
+}
+
+
+/* =========================================================
    TRANSAÇÕES
 ========================================================= */
 
@@ -1235,7 +1366,12 @@ function transactionHtml(t) {
 
     <div class="transaction">
 
-      <div class="transaction-icon ${t.type}">
+      <div
+        class="
+          transaction-icon
+          ${t.type}
+        "
+      >
         ${
           t.type === "income"
             ? "↑"
@@ -1246,6 +1382,7 @@ function transactionHtml(t) {
                 : "↩"
         }
       </div>
+
 
       <div class="transaction-main">
 
@@ -1258,27 +1395,32 @@ function transactionHtml(t) {
         <small>
           ${escapeHtml(
             t.category ||
-            getTypeLabel(t.type)
+            getTypeLabel(
+              t.type
+            )
           )}
+
           ·
-          ${formatDate(t.date)}
+
+          ${formatDate(
+            t.date
+          )}
         </small>
 
       </div>
 
+
       <strong
-        class="${
-          positive
+        class="
+          ${positive
             ? "positive"
-            : "negative"
-        }"
+            : "negative"}
+        "
       >
-        ${
-          positive
-            ? "+"
-            : "-"
-        }${money(t.amount)}
+        ${positive ? "+" : "-"}
+        ${money(t.amount)}
       </strong>
+
 
       <button
         class="more-btn"
@@ -1287,6 +1429,7 @@ function transactionHtml(t) {
       >
         ✎
       </button>
+
 
       <button
         class="more-btn"
@@ -1311,7 +1454,9 @@ function formatDate(d) {
     y,
     m,
     day
-  ] = d.split("-");
+  ] =
+    d.split("-");
+
 
   return `${day}/${m}/${y}`;
 
@@ -1320,46 +1465,50 @@ function formatDate(d) {
 
 function renderTransactions() {
 
-  if (
-    !$("searchTransactions") ||
-    !$("typeFilter") ||
-    !$("categoryFilter") ||
-    !$("allTransactions")
-  ) {
-    return;
-  }
-
-
   const search =
     (
       $("searchTransactions")
-        .value || ""
+        ?.value ||
+      ""
     ).toLowerCase();
 
 
   const type =
-    $("typeFilter").value;
+    $("typeFilter")
+      ?.value || "";
 
-  const cat =
-    $("categoryFilter").value;
+
+  const category =
+    $("categoryFilter")
+      ?.value || "";
 
 
   let arr =
     [...transactions]
       .filter(
         t =>
+
           (!type ||
-            t.type === type) &&
+            t.type === type)
 
-          (!cat ||
-            t.category === cat) &&
+          &&
 
-          (!search ||
+          (!category ||
+            t.category ===
+            category)
+
+          &&
+
+          (
+            !search ||
+
             String(
               t.description
             )
               .toLowerCase()
-              .includes(search))
+              .includes(search)
+          )
+
       );
 
 
@@ -1385,20 +1534,25 @@ function renderTransactions() {
   }
 
 
-  $("allTransactions")
-    .innerHTML =
+  if ($("allTransactions")) {
 
-    arr.length
+    $("allTransactions")
+      .innerHTML =
+      arr.length
 
-      ? arr
-          .map(transactionHtml)
-          .join("")
+        ? arr
+            .map(
+              transactionHtml
+            )
+            .join("")
 
-      : `
-        <div class="empty-state">
-          Nenhum registro encontrado.
-        </div>
-      `;
+        : `
+          <div class="empty-state">
+            Nenhum registro encontrado.
+          </div>
+        `;
+
+  }
 
 
   bindTransactionActions();
@@ -1422,30 +1576,23 @@ function bindTransactionActions() {
               "Excluir esta movimentação?"
             )
           ) {
+
             return;
-          }
-
-          try {
-
-            await deleteDoc(
-              doc(
-                sub("transactions"),
-                button.dataset.delete
-              )
-            );
-
-            showToast(
-              "Movimentação excluída."
-            );
-
-          } catch (error) {
-
-            showToast(
-              firebaseError(error),
-              "error"
-            );
 
           }
+
+
+          await deleteDoc(
+            doc(
+              sub("transactions"),
+              button.dataset.delete
+            )
+          );
+
+
+          showToast(
+            "Movimentação excluída."
+          );
 
         };
 
@@ -1475,12 +1622,8 @@ function bindTransactionActions() {
 
 function populateCategories() {
 
-  if (
-    !$("transactionCategory") ||
-    !$("categoryFilter")
-  ) {
+  if (!$("transactionCategory"))
     return;
-  }
 
 
   const opts =
@@ -1493,11 +1636,17 @@ function populateCategories() {
       )
       .map(
         c =>
-          `<option value="${escapeHtml(
-            c.name
-          )}">
-            ${escapeHtml(c.name)}
-          </option>`
+          `
+            <option
+              value="${escapeHtml(
+                c.name
+              )}"
+            >
+              ${escapeHtml(
+                c.name
+              )}
+            </option>
+          `
       )
       .join("");
 
@@ -1506,11 +1655,19 @@ function populateCategories() {
     .innerHTML = opts;
 
 
-  $("categoryFilter")
-    .innerHTML =
-    `<option value="">
-      Todas as categorias
-    </option>${opts}`;
+  if ($("categoryFilter")) {
+
+    $("categoryFilter")
+      .innerHTML =
+      `
+        <option value="">
+          Todas as categorias
+        </option>
+
+        ${opts}
+      `;
+
+  }
 
 }
 
@@ -1519,7 +1676,9 @@ function populateCategories() {
    TIPO DE TRANSAÇÃO
 ========================================================= */
 
-function setTransactionType(type) {
+function setTransactionType(
+  type
+) {
 
   if ($("transactionType")) {
 
@@ -1530,12 +1689,15 @@ function setTransactionType(type) {
 
 
   document
-    .querySelectorAll(".type-btn")
+    .querySelectorAll(
+      ".type-btn"
+    )
     .forEach(button => {
 
       button.classList.toggle(
         "active",
-        button.dataset.type === type
+        button.dataset.type ===
+        type
       );
 
     });
@@ -1553,21 +1715,18 @@ function setTransactionType(type) {
   }
 
 
-  if ($("paymentMethod")) {
+  const payment =
+    $("paymentMethod")
+      ?.closest("label");
 
-    const label =
-      $("paymentMethod")
-        .closest("label");
 
-    if (label) {
+  if (payment) {
 
-      label.classList.toggle(
-        "hidden",
-        type === "save" ||
-        type === "withdraw"
-      );
-
-    }
+    payment.classList.toggle(
+      "hidden",
+      type === "save" ||
+      type === "withdraw"
+    );
 
   }
 
@@ -1575,29 +1734,48 @@ function setTransactionType(type) {
 
 
 /* =========================================================
-   ABRIR / EDITAR TRANSAÇÃO
+   ABRIR TRANSAÇÃO
 ========================================================= */
 
 function openTransaction(
   type = "expense"
 ) {
 
-  if (!$("transactionForm")) {
+  if (!$("transactionForm"))
     return;
+
+
+  $("transactionForm")
+    .reset();
+
+
+  if ($("transactionId")) {
+
+    $("transactionId")
+      .value = "";
+
   }
 
-  $("transactionForm").reset();
 
-  $("transactionId").value = "";
+  if ($("transactionDate")) {
 
-  $("transactionDate").value =
-    today();
+    $("transactionDate")
+      .value = today();
 
-  $("transactionModalTitle")
-    .textContent =
-    "Adicionar movimentação";
+  }
+
+
+  if ($("transactionModalTitle")) {
+
+    $("transactionModalTitle")
+      .textContent =
+      "Adicionar movimentação";
+
+  }
+
 
   setTransactionType(type);
+
 
   openModal(
     "transactionModal"
@@ -1606,6 +1784,10 @@ function openTransaction(
 }
 
 
+/* =========================================================
+   EDITAR TRANSAÇÃO
+========================================================= */
+
 function editTransaction(id) {
 
   const t =
@@ -1613,26 +1795,60 @@ function editTransaction(id) {
       x => x.id === id
     );
 
+
   if (!t) return;
 
 
-  $("transactionId").value =
-    id;
+  if ($("transactionId")) {
 
-  $("transactionAmount").value =
-    t.amount;
+    $("transactionId")
+      .value = id;
 
-  $("transactionDescription").value =
-    t.description;
+  }
 
-  $("transactionDate").value =
-    t.date;
 
-  $("paymentMethod").value =
-    t.paymentMethod || "Pix";
+  if ($("transactionAmount")) {
 
-  $("transactionNote").value =
-    t.note || "";
+    $("transactionAmount")
+      .value = t.amount;
+
+  }
+
+
+  if ($("transactionDescription")) {
+
+    $("transactionDescription")
+      .value =
+      t.description;
+
+  }
+
+
+  if ($("transactionDate")) {
+
+    $("transactionDate")
+      .value = t.date;
+
+  }
+
+
+  if ($("paymentMethod")) {
+
+    $("paymentMethod")
+      .value =
+      t.paymentMethod ||
+      "Pix";
+
+  }
+
+
+  if ($("transactionNote")) {
+
+    $("transactionNote")
+      .value =
+      t.note || "";
+
+  }
 
 
   setTransactionType(
@@ -1640,7 +1856,10 @@ function editTransaction(id) {
   );
 
 
-  if (t.category) {
+  if (
+    t.category &&
+    $("transactionCategory")
+  ) {
 
     $("transactionCategory")
       .value =
@@ -1649,9 +1868,13 @@ function editTransaction(id) {
   }
 
 
-  $("transactionModalTitle")
-    .textContent =
-    "Editar movimentação";
+  if ($("transactionModalTitle")) {
+
+    $("transactionModalTitle")
+      .textContent =
+      "Editar movimentação";
+
+  }
 
 
   openModal(
@@ -1674,17 +1897,20 @@ if ($("transactionForm")) {
 
 
       const id =
-        $("transactionId").value;
+        $("transactionId")
+          ?.value;
 
 
       const data = {
 
         type:
-          $("transactionType").value,
+          $("transactionType")
+            .value,
 
         amount:
           Number(
-            $("transactionAmount").value
+            $("transactionAmount")
+              .value
           ),
 
         description:
@@ -1694,18 +1920,20 @@ if ($("transactionForm")) {
 
         category:
           $("transactionCategory")
-            .value || "",
+            ?.value || "",
 
         date:
-          $("transactionDate").value,
+          $("transactionDate")
+            .value,
 
         paymentMethod:
-          $("paymentMethod").value,
+          $("paymentMethod")
+            ?.value || "",
 
         note:
           $("transactionNote")
-            .value
-            .trim(),
+            ?.value
+            .trim() || "",
 
         updatedAt:
           serverTimestamp()
@@ -1743,14 +1971,16 @@ if ($("transactionForm")) {
           $("transactionModal")
         );
 
+
         showToast(
           "Movimentação salva."
         );
 
-      } catch (error) {
+
+      } catch (e) {
 
         showToast(
-          firebaseError(error),
+          firebaseError(e),
           "error"
         );
 
@@ -1767,13 +1997,11 @@ if ($("transactionForm")) {
 
 function renderGoals() {
 
-  if (!$("goalsGrid")) {
+  if (!$("goalsGrid"))
     return;
-  }
 
 
   $("goalsGrid").innerHTML =
-
     goals.length
 
       ? goals
@@ -1783,12 +2011,14 @@ function renderGoals() {
               Math.min(
                 100,
                 (
-                  Number(g.current) ||
-                  0
+                  Number(
+                    g.current
+                  ) || 0
                 ) /
                 (
-                  Number(g.target) ||
-                  1
+                  Number(
+                    g.target
+                  ) || 1
                 ) *
                 100
               );
@@ -1796,9 +2026,13 @@ function renderGoals() {
 
             return `
 
-              <article class="goal-card">
+              <article
+                class="goal-card"
+              >
 
-                <div class="goal-top">
+                <div
+                  class="goal-top"
+                >
 
                   <div>
 
@@ -1811,14 +2045,17 @@ function renderGoals() {
                     <small>
                       ${
                         g.deadline
-                          ? `Prazo: ${formatDate(
-                              g.deadline
-                            )}`
+                          ? `Prazo: ${
+                              formatDate(
+                                g.deadline
+                              )
+                            }`
                           : "Sem prazo"
                       }
                     </small>
 
                   </div>
+
 
                   <button
                     class="more-btn"
@@ -1830,23 +2067,34 @@ function renderGoals() {
                 </div>
 
 
-                <div class="goal-values">
+                <div
+                  class="goal-values"
+                >
 
                   <strong>
-                    ${money(g.current)}
+                    ${money(
+                      g.current
+                    )}
                   </strong>
 
                   <span>
-                    de ${money(g.target)}
+                    de
+                    ${money(
+                      g.target
+                    )}
                   </span>
 
                 </div>
 
 
-                <div class="progress">
+                <div
+                  class="progress"
+                >
 
                   <i
-                    style="width:${pct}%"
+                    style="
+                      width:${pct}%
+                    "
                   ></i>
 
                 </div>
@@ -1865,10 +2113,15 @@ function renderGoals() {
           .join("")
 
       : `
-        <div class="empty-state panel">
-          Você ainda não criou nenhuma meta.
-        </div>
-      `;
+
+          <div
+            class="empty-state panel"
+          >
+            Você ainda não criou
+            nenhuma meta.
+          </div>
+
+        `;
 
 
   document
@@ -1885,8 +2138,11 @@ function renderGoals() {
               "Excluir esta meta?"
             )
           ) {
+
             return;
+
           }
+
 
           await deleteDoc(
             doc(
@@ -1903,7 +2159,7 @@ function renderGoals() {
 
 
 /* =========================================================
-   FORMULÁRIO DE METAS
+   NOVA META
 ========================================================= */
 
 if ($("goalForm")) {
@@ -1913,55 +2169,50 @@ if ($("goalForm")) {
 
       e.preventDefault();
 
-      try {
 
-        await addDoc(
-          sub("goals"),
-          {
-            name:
-              $("goalName")
+      await addDoc(
+        sub("goals"),
+        {
+
+          name:
+            $("goalName")
+              .value
+              .trim(),
+
+          target:
+            Number(
+              $("goalTarget")
                 .value
-                .trim(),
+            ),
 
-            target:
-              Number(
-                $("goalTarget").value
-              ),
+          current:
+            Number(
+              $("goalCurrent")
+                .value || 0
+            ),
 
-            current:
-              Number(
-                $("goalCurrent").value ||
-                0
-              ),
+          deadline:
+            $("goalDeadline")
+              .value || "",
 
-            deadline:
-              $("goalDeadline").value ||
-              "",
+          createdAt:
+            serverTimestamp()
 
-            createdAt:
-              serverTimestamp()
-          }
-        );
+        }
+      );
 
 
-        closeModal(
-          $("goalModal")
-        );
+      closeModal(
+        $("goalModal")
+      );
 
-        e.target.reset();
 
-        showToast(
-          "Meta criada."
-        );
+      e.target.reset();
 
-      } catch (error) {
 
-        showToast(
-          firebaseError(error),
-          "error"
-        );
-
-      }
+      showToast(
+        "Meta criada."
+      );
 
     };
 
@@ -1974,39 +2225,41 @@ if ($("goalForm")) {
 
 function renderSettings() {
 
-  if (
-    !$("fixedList") ||
-    !$("categoryList")
-  ) {
+  if (!$("fixedList"))
     return;
-  }
 
 
   $("fixedList").innerHTML =
-
     fixedExpenses.length
 
       ? fixedExpenses
           .map(
             x => `
 
-              <div class="setting-row">
+              <div
+                class="setting-row"
+              >
 
                 <span>
 
                   <strong>
-                    ${escapeHtml(x.name)}
+                    ${escapeHtml(
+                      x.name
+                    )}
                   </strong>
 
                   <small>
-                    Dia ${x.day || "—"}
+                    Dia
+                    ${x.day || "—"}
                   </small>
 
                 </span>
 
+
                 <strong>
                   ${money(x.amount)}
                 </strong>
+
 
                 <button
                   class="more-btn"
@@ -2022,42 +2275,52 @@ function renderSettings() {
           .join("")
 
       : `
-        <div class="empty-state">
-          Nenhum gasto fixo.
-        </div>
-      `;
 
-
-  $("categoryList").innerHTML =
-
-    [...categories]
-      .sort(
-        (a, b) =>
-          a.name.localeCompare(
-            b.name
-          )
-      )
-      .map(
-        x => `
-
-          <div class="setting-row">
-
-            <span>
-              ${escapeHtml(x.name)}
-            </span>
-
-            <button
-              class="more-btn"
-              data-cat-delete="${x.id}"
-            >
-              ×
-            </button>
-
+          <div class="empty-state">
+            Nenhum gasto fixo.
           </div>
 
-        `
-      )
-      .join("");
+        `;
+
+
+  if ($("categoryList")) {
+
+    $("categoryList")
+      .innerHTML =
+      [...categories]
+        .sort(
+          (a, b) =>
+            a.name.localeCompare(
+              b.name
+            )
+        )
+        .map(
+          x => `
+
+            <div
+              class="setting-row"
+            >
+
+              <span>
+                ${escapeHtml(
+                  x.name
+                )}
+              </span>
+
+              <button
+                class="more-btn"
+                data-cat-delete="${x.id}"
+              >
+                ×
+              </button>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+  }
 
 
   document
@@ -2134,21 +2397,33 @@ if ($("newFixedBtn")) {
 
       simpleMode = "fixed";
 
+
       $("simpleModalTitle")
         .textContent =
         "Novo gasto fixo";
 
+
       $("simpleValueLabel")
-        .classList
+        ?.classList
         .remove("hidden");
+
 
       $("simpleDayLabel")
-        .classList
+        ?.classList
         .remove("hidden");
 
-      $("simpleName").value = "";
-      $("simpleValue").value = "";
-      $("simpleDay").value = "";
+
+      $("simpleName")
+        .value = "";
+
+
+      $("simpleValue")
+        .value = "";
+
+
+      $("simpleDay")
+        .value = "";
+
 
       openModal(
         "simpleModal"
@@ -2166,19 +2441,25 @@ if ($("newCategoryBtn")) {
 
       simpleMode = "category";
 
+
       $("simpleModalTitle")
         .textContent =
         "Nova categoria";
 
+
       $("simpleValueLabel")
-        .classList
+        ?.classList
         .add("hidden");
+
 
       $("simpleDayLabel")
-        .classList
+        ?.classList
         .add("hidden");
 
-      $("simpleName").value = "";
+
+      $("simpleName")
+        .value = "";
+
 
       openModal(
         "simpleModal"
@@ -2197,71 +2478,67 @@ if ($("simpleForm")) {
       e.preventDefault();
 
 
-      try {
+      if (
+        simpleMode ===
+        "fixed"
+      ) {
 
-        if (
-          simpleMode === "fixed"
-        ) {
+        await addDoc(
+          sub("fixedExpenses"),
+          {
 
-          await addDoc(
-            sub("fixedExpenses"),
-            {
-              name:
-                $("simpleName")
+            name:
+              $("simpleName")
+                .value
+                .trim(),
+
+            amount:
+              Number(
+                $("simpleValue")
                   .value
-                  .trim(),
+              ),
 
-              amount:
-                Number(
-                  $("simpleValue")
-                    .value
-                ),
+            day:
+              Number(
+                $("simpleDay")
+                  .value || 0
+              ),
 
-              day:
-                Number(
-                  $("simpleDay")
-                    .value || 0
-                ),
+            createdAt:
+              serverTimestamp()
 
-              createdAt:
-                serverTimestamp()
-            }
-          );
-
-        } else {
-
-          await addDoc(
-            sub("categories"),
-            {
-              name:
-                $("simpleName")
-                  .value
-                  .trim(),
-
-              createdAt:
-                serverTimestamp()
-            }
-          );
-
-        }
-
-
-        closeModal(
-          $("simpleModal")
+          }
         );
 
-        showToast(
-          "Salvo."
-        );
 
-      } catch (error) {
+      } else {
 
-        showToast(
-          firebaseError(error),
-          "error"
+        await addDoc(
+          sub("categories"),
+          {
+
+            name:
+              $("simpleName")
+                .value
+                .trim(),
+
+            createdAt:
+              serverTimestamp()
+
+          }
         );
 
       }
+
+
+      closeModal(
+        $("simpleModal")
+      );
+
+
+      showToast(
+        "Salvo."
+      );
 
     };
 
@@ -2269,10 +2546,22 @@ if ($("simpleForm")) {
 
 
 /* =========================================================
-   NAVEGAÇÃO ENTRE FINANCEIRO E TAREFAS
+   TROCA DE ÁREA
 ========================================================= */
 
 function openModule(module) {
+
+  /*
+    Fecha o menu do celular
+    sempre que trocar de área.
+  */
+
+  closeMobileMenu();
+
+
+  /*
+    Esconde a tela de escolha.
+  */
 
   if ($("homeView")) {
 
@@ -2283,20 +2572,98 @@ function openModule(module) {
   }
 
 
+  /*
+    FINANCEIRO
+  */
+
   if (module === "finance") {
 
-    goPage(
-      "dashboard"
-    );
+    /*
+      Mostra navegação financeira.
+    */
+
+    if ($("financeNav")) {
+
+      $("financeNav")
+        .classList
+        .remove("hidden");
+
+    }
+
+
+    /*
+      Esconde navegação de tarefas.
+    */
+
+    if ($("tasksNav")) {
+
+      $("tasksNav")
+        .classList
+        .add("hidden");
+
+    }
+
+
+    /*
+      Botão rápido volta
+      a ser de movimentação.
+    */
+
+    if ($("quickAdd")) {
+
+      $("quickAdd")
+        .classList
+        .remove("hidden");
+
+      $("quickAdd").textContent =
+        "+ Adicionar";
+
+    }
+
+
+    goPage("dashboard");
 
   }
 
 
+  /*
+    TAREFAS
+  */
+
   if (module === "tasks") {
 
-    goPage(
-      "tasks"
-    );
+    /*
+      Esconde navegação financeira.
+    */
+
+    if ($("financeNav")) {
+
+      $("financeNav")
+        .classList
+        .add("hidden");
+
+    }
+
+
+    /*
+      Mostra navegação de tarefas.
+    */
+
+    if ($("tasksNav")) {
+
+      $("tasksNav")
+        .classList
+        .remove("hidden");
+
+    }
+
+
+    /*
+      Se existir uma página
+      de tarefas, abre ela.
+    */
+
+    goPage("tasks");
 
   }
 
@@ -2304,7 +2671,7 @@ function openModule(module) {
 
 
 /* =========================================================
-   NAVEGAÇÃO DAS PÁGINAS
+   PÁGINAS
 ========================================================= */
 
 function goPage(page) {
@@ -2312,17 +2679,33 @@ function goPage(page) {
   currentPage = page;
 
 
+  /*
+    Fecha menu mobile.
+  */
+
+  closeMobileMenu();
+
+
+  /*
+    Esconde todas as páginas.
+  */
+
   document
     .querySelectorAll(".page")
     .forEach(p => {
 
       p.classList.toggle(
         "hidden",
-        p.id !== `page-${page}`
+        p.id !==
+        `page-${page}`
       );
 
     });
 
+
+  /*
+    Marca item ativo.
+  */
 
   document
     .querySelectorAll(
@@ -2332,11 +2715,16 @@ function goPage(page) {
 
       button.classList.toggle(
         "active",
-        button.dataset.page === page
+        button.dataset.page ===
+        page
       );
 
     });
 
+
+  /*
+    Títulos.
+  */
 
   const titles = {
 
@@ -2360,8 +2748,7 @@ function goPage(page) {
 
   if ($("pageTitle")) {
 
-    $("pageTitle")
-      .textContent =
+    $("pageTitle").textContent =
       titles[page] ||
       "Meu Controle";
 
@@ -2371,7 +2758,46 @@ function goPage(page) {
 
 
 /* =========================================================
-   BOTÕES DA TELA INICIAL
+   BOTÃO VOLTAR PARA ESCOLHA DE ÁREA
+========================================================= */
+
+document
+  .querySelectorAll(
+    "[data-home]"
+  )
+  .forEach(button => {
+
+    button.onclick = () => {
+
+      closeMobileMenu();
+
+
+      if ($("homeView")) {
+
+        $("homeView")
+          .classList
+          .remove("hidden");
+
+      }
+
+
+      document
+        .querySelectorAll(".page")
+        .forEach(page => {
+
+          page.classList.add(
+            "hidden"
+          );
+
+        });
+
+    };
+
+  });
+
+
+/* =========================================================
+   BOTÕES DE ÁREA
 ========================================================= */
 
 document
@@ -2395,7 +2821,7 @@ document
 
 
 /* =========================================================
-   SIDEBAR
+   BOTÕES DE PÁGINA
 ========================================================= */
 
 document
@@ -2404,53 +2830,16 @@ document
   )
   .forEach(button => {
 
-    button.onclick =
-      () =>
-        goPage(
-          button.dataset.page
-        );
+    button.onclick = () => {
+
+      goPage(
+        button.dataset.page
+      );
+
+    };
 
   });
 
-
-/* =========================================================
-   BOTÃO INÍCIO
-========================================================= */
-
-document
-  .querySelectorAll(
-    "[data-home]"
-  )
-  .forEach(button => {
-
-    button.onclick =
-      () => {
-
-        document
-          .querySelectorAll(".page")
-          .forEach(page => {
-            page.classList.add(
-              "hidden"
-            );
-          });
-
-
-        if ($("homeView")) {
-
-          $("homeView")
-            .classList
-            .remove("hidden");
-
-        }
-
-      };
-
-  });
-
-
-/* =========================================================
-   LINKS INTERNOS
-========================================================= */
 
 document
   .querySelectorAll(
@@ -2458,11 +2847,10 @@ document
   )
   .forEach(button => {
 
-    button.onclick =
-      () =>
-        goPage(
-          button.dataset.pageLink
-        );
+    button.onclick = () =>
+      goPage(
+        button.dataset.pageLink
+      );
 
   });
 
@@ -2479,6 +2867,10 @@ if ($("quickAdd")) {
 
 }
 
+
+/* =========================================================
+   BOTÃO NOVA META
+========================================================= */
 
 if ($("newGoalBtn")) {
 
@@ -2497,7 +2889,8 @@ if ($("newGoalBtn")) {
 
 if ($("monthFilter")) {
 
-  $("monthFilter").value =
+  $("monthFilter")
+    .value =
     selectedMonth;
 
 
@@ -2555,11 +2948,10 @@ document
   )
   .forEach(button => {
 
-    button.onclick =
-      () =>
-        setTransactionType(
-          button.dataset.type
-        );
+    button.onclick = () =>
+      setTransactionType(
+        button.dataset.type
+      );
 
   });
 
@@ -2574,11 +2966,12 @@ document
   )
   .forEach(button => {
 
-    button.onclick =
-      () =>
-        closeModal(
-          button.closest(".modal")
-        );
+    button.onclick = () =>
+      closeModal(
+        button.closest(
+          ".modal"
+        )
+      );
 
   });
 
@@ -2592,7 +2985,8 @@ document
       e => {
 
         if (
-          e.target === modal
+          e.target ===
+          modal
         ) {
 
           closeModal(
@@ -2611,27 +3005,173 @@ document
    MENU MOBILE
 ========================================================= */
 
+function closeMobileMenu() {
+
+  const sidebar =
+    document.querySelector(
+      ".sidebar"
+    );
+
+
+  if (sidebar) {
+
+    sidebar.classList.remove(
+      "open"
+    );
+
+  }
+
+}
+
+
+/*
+  Abre / fecha o menu
+  pelas três barrinhas.
+*/
+
 if ($("mobileMenu")) {
 
   $("mobileMenu").onclick =
-    () => {
+    e => {
+
+      e.stopPropagation();
+
 
       const sidebar =
         document.querySelector(
           ".sidebar"
         );
 
-      if (sidebar) {
 
-        sidebar.classList.toggle(
-          "open"
-        );
+      if (!sidebar) return;
 
-      }
+
+      sidebar.classList.toggle(
+        "open"
+      );
 
     };
 
 }
+
+
+/*
+  Se clicar em qualquer
+  item do menu, fecha.
+*/
+
+document
+  .querySelectorAll(
+    ".sidebar [data-page], .sidebar [data-home], .sidebar [data-module]"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        closeMobileMenu();
+
+      }
+    );
+
+  });
+
+
+/*
+  Se clicar fora da sidebar
+  no celular, fecha.
+*/
+
+document.addEventListener(
+  "click",
+  e => {
+
+    const sidebar =
+      document.querySelector(
+        ".sidebar"
+      );
+
+
+    const mobileMenu =
+      $("mobileMenu");
+
+
+    if (!sidebar) return;
+
+
+    const isMobile =
+      window.innerWidth <= 900;
+
+
+    if (!isMobile) return;
+
+
+    if (
+      sidebar.classList.contains(
+        "open"
+      ) &&
+
+      !sidebar.contains(
+        e.target
+      ) &&
+
+      !mobileMenu?.contains(
+        e.target
+      )
+    ) {
+
+      closeMobileMenu();
+
+    }
+
+  }
+);
+
+
+/*
+  ESC também fecha.
+*/
+
+document.addEventListener(
+  "keydown",
+  e => {
+
+    if (
+      e.key === "Escape"
+    ) {
+
+      closeMobileMenu();
+
+      closeAllModals();
+
+    }
+
+  }
+);
+
+
+/*
+  Se mudar para tela grande,
+  garante que o estado mobile
+  não fique preso.
+*/
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    if (
+      window.innerWidth >
+      900
+    ) {
+
+      closeMobileMenu();
+
+    }
+
+  }
+);
 
 
 /* =========================================================
@@ -2645,10 +3185,11 @@ if ($("changePasswordBtn")) {
 
       try {
 
-        await sendPasswordResetEmail(
+        await resetPassword(
           auth,
           user.email
         );
+
 
         showToast(
           "E-mail para troca de senha enviado."
@@ -2680,7 +3221,8 @@ if ($("exportBtn")) {
       const data = {
 
         exportedAt:
-          new Date().toISOString(),
+          new Date()
+            .toISOString(),
 
         transactions,
 
@@ -2714,15 +3256,19 @@ if ($("exportBtn")) {
           "a"
         );
 
+
       a.href =
         URL.createObjectURL(
           blob
         );
 
+
       a.download =
         `controle-financeiro-${today()}.json`;
 
+
       a.click();
+
 
       URL.revokeObjectURL(
         a.href
@@ -2753,82 +3299,69 @@ if ($("deleteDataBtn")) {
       }
 
 
-      try {
+      const all = [
 
-        const all = [
+        ...transactions.map(
+          x => [
+            "transactions",
+            x.id
+          ]
+        ),
 
-          ...transactions.map(
-            x => [
-              "transactions",
-              x.id
-            ]
-          ),
+        ...goals.map(
+          x => [
+            "goals",
+            x.id
+          ]
+        ),
 
-          ...goals.map(
-            x => [
-              "goals",
-              x.id
-            ]
-          ),
+        ...fixedExpenses.map(
+          x => [
+            "fixedExpenses",
+            x.id
+          ]
+        ),
 
-          ...fixedExpenses.map(
-            x => [
-              "fixedExpenses",
-              x.id
-            ]
-          ),
+        ...categories.map(
+          x => [
+            "categories",
+            x.id
+          ]
+        )
 
-          ...categories.map(
-            x => [
-              "categories",
-              x.id
-            ]
-          )
-
-        ];
+      ];
 
 
-        const batch =
-          writeBatch(db);
+      const batch =
+        writeBatch(db);
 
 
-        all.forEach(
-          ([collectionName, id]) => {
+      all.forEach(
+        ([collectionName, id]) => {
 
-            batch.delete(
-              doc(
-                db,
-                "users",
-                user.uid,
-                collectionName,
-                id
-              )
-            );
+          batch.delete(
+            doc(
+              db,
+              "users",
+              user.uid,
+              collectionName,
+              id
+            )
+          );
 
-          }
-        );
+        }
+      );
 
 
-        await batch.commit();
+      await batch.commit();
 
-        await seedCategories();
 
-        showToast(
-          "Dados apagados."
-        );
+      await seedCategories();
 
-      } catch (error) {
 
-        console.error(
-          error
-        );
-
-        showToast(
-          firebaseError(error),
-          "error"
-        );
-
-      }
+      showToast(
+        "Dados apagados."
+      );
 
     };
 
