@@ -399,12 +399,108 @@ $("simpleForm").onsubmit=async e=>{
   closeModal($("simpleModal"));showToast("Salvo.");
 };
 
-function goPage(page){
-  currentPage=page;
-  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hidden",p.id!==`page-${page}`));
-  document.querySelectorAll(".nav-item[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
-  $("pageTitle").textContent={dashboard:"Dashboard",transactions:"Movimentações",goals:"Metas",settings:"Configurações"}[page];
+
+
+
+
+function openModule(module){
+
+  $("homeView").classList.add("hidden");
+
+  if(module === "finance"){
+
+    /*
+      Abre o sistema financeiro.
+    */
+    goPage("dashboard");
+
+  }
+
+  if(module === "tasks"){
+
+    /*
+      Abre a área de tarefas.
+    */
+    goPage("tasks");
+
+  }
+
 }
+
+
+
+
+
+
+
+
+
+function goPage(page){
+
+  currentPage=page;
+
+  /*
+    Esconde todas as páginas.
+  */
+  document.querySelectorAll(".page").forEach(p=>{
+    p.classList.toggle(
+      "hidden",
+      p.id !== `page-${page}`
+    );
+  });
+
+
+  /*
+    Marca a página atual na sidebar.
+  */
+  document.querySelectorAll(".nav-item[data-page]").forEach(button=>{
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
+    );
+  });
+
+
+  /*
+    Título da página.
+  */
+  const titles={
+
+    dashboard:"Dashboard",
+
+    transactions:"Movimentações",
+
+    tasks:"Tarefas",
+
+    goals:"Metas",
+
+    settings:"Configurações"
+
+  };
+
+
+  $("pageTitle").textContent=titles[page] || "Meu Controle";
+
+}  
+
+
+
+
+document.querySelectorAll("[data-module]").forEach(button=>{
+
+  button.addEventListener("click",()=>{
+
+    openModule(button.dataset.module);
+
+  });
+
+});
+
+
+
+
+
+
 document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>goPage(b.dataset.page));
 document.querySelectorAll("[data-page-link]").forEach(b=>b.onclick=()=>goPage(b.dataset.pageLink));
 $("quickAdd").onclick=()=>openTransaction();
