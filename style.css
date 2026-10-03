@@ -16,6 +16,7 @@ small{font-size:12px}.muted{color:var(--muted)}.hidden{display:none!important}.p
 @media(max-width:720px){.sidebar{transform:translateX(-100%);transition:.2s}.sidebar.open{transform:none}.main{margin-left:0;width:100%;padding:18px 14px}.mobile-only{display:block}.topbar{gap:10px}.topbar .primary{padding:10px 12px}.cards,.grid-2,.goals-grid{grid-template-columns:1fr}.month-row,.toolbar{flex-wrap:wrap}.toolbar>*{max-width:none!important;width:100%}.month-row{align-items:stretch}.month-row label{width:100%}.type-buttons{grid-template-columns:repeat(2,1fr)}.transaction{grid-template-columns:36px 1fr auto}.transaction .more-btn{display:none}.transaction>strong{grid-column:2;grid-row:2}.panel{padding:16px}}
 
 
+
 .chart-card {
   margin-top: 20px;
 }
