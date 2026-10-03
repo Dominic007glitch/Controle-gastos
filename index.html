@@ -3,307 +3,1501 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Controle financeiro pessoal">
-  <title>Meu Controle Financeiro</title>
+
+  <meta
+    name="description"
+    content="Controle financeiro e organização pessoal"
+  >
+
+  <title>Meu Controle</title>
+
   <link rel="stylesheet" href="style.css">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="app.js"></script>
 </head>
+
 <body>
-  <div id="loading" class="loading-screen"><div class="spinner"></div><span>Carregando...</span></div>
 
+  <!-- =========================
+       LOADING
+  ========================== -->
+  <div id="loading" class="loading-screen">
+    <div class="spinner"></div>
+    <span>Carregando...</span>
+  </div>
+
+
+  <!-- =========================
+       LOGIN / CADASTRO
+  ========================== -->
   <section id="authView" class="auth-view hidden">
+
     <div class="auth-card">
+
       <div class="brand-mark">R$</div>
+
       <h1>Meu Controle</h1>
-      <p class="muted">Seu dinheiro organizado em um só lugar.</p>
-
-
-
-
-<button class="nav-item home-nav" data-home>
-  ← <span>Início</span>
-</button>
-
-      
-
-      <div class="auth-tabs">
-        <button class="tab active" data-auth-tab="login">Entrar</button>
-        <button class="tab" data-auth-tab="register">Criar conta</button>
-      </div>
-
-      <form id="loginForm" class="auth-form">
-        <label>E-mail<input id="loginEmail" type="email" autocomplete="email" required></label>
-        <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-        <button class="primary full" type="submit">Entrar</button>
-        <button id="forgotPassword" class="link-btn" type="button">Esqueci minha senha</button>
-      </form>
-
-      <form id="registerForm" class="auth-form hidden">
-        <label>Nome<input id="registerName" type="text" autocomplete="name" required></label>
-        <label>E-mail<input id="registerEmail" type="email" autocomplete="email" required></label>
-        <label>Senha <small>(mínimo 6 caracteres)</small><input id="registerPassword" type="password" autocomplete="new-password" minlength="6" required></label>
-        <button class="primary full" type="submit">Criar conta</button>
-      </form>
-      <p id="authMessage" class="message"></p>
-    </div>
-  </section>
-
-  <div id="appView" class="app hidden">
-
-
-
-<div id="appView" class="app hidden">
-
-  <!-- TELA INICIAL -->
-  <section id="homeView" class="home-view hidden">
-
-    <div class="home-content">
-
-      <div class="brand-mark home-brand">R$</div>
-
-      <h1>O que você deseja organizar?</h1>
 
       <p class="muted">
-        Escolha uma área para começar.
+        Seu dinheiro organizado em um só lugar.
       </p>
 
 
-      <div class="home-options">
+      <div class="auth-tabs">
 
-        <button class="home-option" data-module="tasks">
-
-          <div class="home-option-icon finance-icon">
-            R$
-          </div>
-
-          <div class="home-option-content">
-            <h2>Minha vida financeira</h2>
-
-            <p>
-              Organize seu dinheiro, acompanhe seus gastos,
-              entradas e metas.
-            </p>
-
-            <span>
-              Acessar →
-            </span>
-          </div>
-
+        <button
+          class="tab active"
+          data-auth-tab="login"
+          type="button"
+        >
+          Entrar
         </button>
 
-
-        <button class="home-option" data-module="tasks">
-
-          <div class="home-option-icon tasks-icon">
-            ✓
-          </div>
-
-          <div class="home-option-content">
-            <h2>Minhas tarefas</h2>
-
-            <p>
-              Organize suas atividades, compromissos
-              e tudo o que você precisa fazer.
-            </p>
-
-            <span>
-              Acessar →
-            </span>
-          </div>
-
+        <button
+          class="tab"
+          data-auth-tab="register"
+          type="button"
+        >
+          Criar conta
         </button>
 
       </div>
+
+
+      <!-- LOGIN -->
+      <form id="loginForm" class="auth-form">
+
+        <label>
+          E-mail
+
+          <input
+            id="loginEmail"
+            type="email"
+            autocomplete="email"
+            required
+          >
+        </label>
+
+
+        <label>
+          Senha
+
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          >
+        </label>
+
+
+        <button
+          class="primary full"
+          type="submit"
+        >
+          Entrar
+        </button>
+
+
+        <button
+          id="forgotPassword"
+          class="link-btn"
+          type="button"
+        >
+          Esqueci minha senha
+        </button>
+
+      </form>
+
+
+      <!-- CADASTRO -->
+      <form
+        id="registerForm"
+        class="auth-form hidden"
+      >
+
+        <label>
+          Nome
+
+          <input
+            id="registerName"
+            type="text"
+            autocomplete="name"
+            required
+          >
+        </label>
+
+
+        <label>
+          E-mail
+
+          <input
+            id="registerEmail"
+            type="email"
+            autocomplete="email"
+            required
+          >
+        </label>
+
+
+        <label>
+          Senha
+          <small>(mínimo 6 caracteres)</small>
+
+          <input
+            id="registerPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          >
+        </label>
+
+
+        <button
+          class="primary full"
+          type="submit"
+        >
+          Criar conta
+        </button>
+
+      </form>
+
+
+      <p
+        id="authMessage"
+        class="message"
+      ></p>
 
     </div>
 
   </section>
 
 
-  <!-- SEU SITE ATUAL CONTINUA AQUI -->
+  <!-- =========================
+       APLICAÇÃO
+  ========================== -->
+  <div id="appView" class="app hidden">
 
-  <aside class="sidebar">
+
+    <!-- =========================
+         TELA INICIAL
+    ========================== -->
+    <section
+      id="homeView"
+      class="home-view hidden"
+    >
+
+      <div class="home-content">
+
+        <div class="brand-mark home-brand">
+          R$
+        </div>
 
 
+        <h1>
+          O que você deseja organizar?
+        </h1>
 
 
-    
-    <aside class="sidebar">
-      <div class="sidebar-brand"><div class="brand-mark small">R$</div><span>Meu Controle</span></div>
-      <nav>
-        <button class="nav-item active" data-page="dashboard">▦ <span>Dashboard</span></button>
-        <button class="nav-item" data-page="transactions">↕ <span>Movimentações</span></button>
-        <button class="nav-item" data-page="goals">◎ <span>Metas</span></button>
-        <button class="nav-item" data-page="settings">⚙ <span>Configurações</span></button>
-      </nav>
-      <div class="sidebar-bottom">
-        <div id="userMini" class="user-mini"></div>
-        <button id="logoutBtn" class="nav-item danger">↪ <span>Sair</span></button>
+        <p class="muted">
+          Escolha uma área para começar.
+        </p>
+
+
+        <div class="home-options">
+
+
+          <!-- FINANCEIRO -->
+          <button
+            class="home-option"
+            data-module="finance"
+            type="button"
+          >
+
+            <div class="home-option-icon finance-icon">
+              R$
+            </div>
+
+
+            <div class="home-option-content">
+
+              <h2>
+                Minha vida financeira
+              </h2>
+
+              <p>
+                Organize seu dinheiro, acompanhe seus
+                gastos, entradas e metas.
+              </p>
+
+              <span>
+                Acessar →
+              </span>
+
+            </div>
+
+          </button>
+
+
+          <!-- TAREFAS -->
+          <button
+            class="home-option"
+            data-module="tasks"
+            type="button"
+          >
+
+            <div class="home-option-icon tasks-icon">
+              ✓
+            </div>
+
+
+            <div class="home-option-content">
+
+              <h2>
+                Minhas tarefas
+              </h2>
+
+              <p>
+                Organize suas atividades, compromissos
+                e tudo o que você precisa fazer.
+              </p>
+
+              <span>
+                Acessar →
+              </span>
+
+            </div>
+
+          </button>
+
+
+        </div>
+
       </div>
+
+    </section>
+
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+    <aside class="sidebar">
+
+      <div class="sidebar-brand">
+
+        <div class="brand-mark small">
+          R$
+        </div>
+
+        <span>
+          Meu Controle
+        </span>
+
+      </div>
+
+
+      <nav>
+
+        <!-- VOLTAR PARA INÍCIO -->
+        <button
+          class="nav-item home-nav"
+          data-home
+          type="button"
+        >
+          ←
+          <span>Início</span>
+        </button>
+
+
+        <!-- FINANCEIRO -->
+        <button
+          class="nav-item active"
+          data-page="dashboard"
+          type="button"
+        >
+          ▦
+          <span>Dashboard</span>
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-page="transactions"
+          type="button"
+        >
+          ↕
+          <span>Movimentações</span>
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-page="goals"
+          type="button"
+        >
+          ◎
+          <span>Metas</span>
+        </button>
+
+
+        <!-- TAREFAS -->
+        <button
+          class="nav-item"
+          data-page="tasks"
+          type="button"
+        >
+          ✓
+          <span>Tarefas</span>
+        </button>
+
+
+        <!-- CONFIGURAÇÕES -->
+        <button
+          class="nav-item"
+          data-page="settings"
+          type="button"
+        >
+          ⚙
+          <span>Configurações</span>
+        </button>
+
+      </nav>
+
+
+      <div class="sidebar-bottom">
+
+        <div
+          id="userMini"
+          class="user-mini"
+        ></div>
+
+
+        <button
+          id="logoutBtn"
+          class="nav-item danger"
+          type="button"
+        >
+          ↪
+          <span>Sair</span>
+        </button>
+
+      </div>
+
     </aside>
 
+
+    <!-- =========================
+         CONTEÚDO PRINCIPAL
+    ========================== -->
     <main class="main">
+
+
+      <!-- TOPBAR -->
       <header class="topbar">
-        <button id="mobileMenu" class="icon-btn mobile-only">☰</button>
+
+        <button
+          id="mobileMenu"
+          class="icon-btn mobile-only"
+          type="button"
+        >
+          ☰
+        </button>
+
+
         <div>
-          <h2 id="pageTitle">Dashboard</h2>
-          <p id="welcomeText" class="muted"></p>
+
+          <h2 id="pageTitle">
+            Dashboard
+          </h2>
+
+          <p
+            id="welcomeText"
+            class="muted"
+          ></p>
+
         </div>
-        <button id="quickAdd" class="primary">+ Adicionar</button>
+
+
+        <button
+          id="quickAdd"
+          class="primary"
+          type="button"
+        >
+          + Adicionar
+        </button>
+
       </header>
 
-      <div id="toast" class="toast"></div>
 
-      <section id="page-dashboard" class="page">
+      <!-- TOAST -->
+      <div
+        id="toast"
+        class="toast"
+      ></div>
+
+
+      <!-- =========================
+           DASHBOARD
+      ========================== -->
+      <section
+        id="page-dashboard"
+        class="page"
+      >
+
         <div class="month-row">
-          <label>Mês
-            <input id="monthFilter" type="month">
+
+          <label>
+            Mês
+
+            <input
+              id="monthFilter"
+              type="month"
+            >
           </label>
-          <button id="exportBtn" class="secondary">Exportar dados</button>
+
+
+          <button
+            id="exportBtn"
+            class="secondary"
+            type="button"
+          >
+            Exportar dados
+          </button>
+
         </div>
 
+
+        <!-- CARDS -->
         <div class="cards">
-          <article class="card"><span>Saldo disponível</span><strong id="balance">R$ 0,00</strong><small>Depois da reserva</small></article>
-          <article class="card"><span>Dinheiro guardado</span><strong id="saved">R$ 0,00</strong><small>Reserva atual</small></article>
-          <article class="card"><span>Entradas no mês</span><strong id="income">R$ 0,00</strong><small>Dinheiro recebido</small></article>
-          <article class="card"><span>Gastos no mês</span><strong id="expenses">R$ 0,00</strong><small>Despesas registradas</small></article>
-        </div>
 
+          <article class="card">
 
+            <span>
+              Saldo disponível
+            </span>
 
-        
+            <strong id="balance">
+              R$ 0,00
+            </strong>
 
+            <small>
+              Depois da reserva
+            </small>
 
-
-<div class="card chart-card">
-    <div class="card-header">
-        <div>
-            <h3>Gastos por categoria</h3>
-            <p>Veja onde seu dinheiro está sendo gasto</p>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <canvas id="expensesChart"></canvas>
-    </div>
-</div>
-
-
-        
-
-
-
-
-
-
-
-        
-
-        <div class="grid-2">
-          <article class="panel">
-            <div class="panel-head"><h3>Gastos por categoria</h3></div>
-            <div id="categoryChart" class="bar-chart empty-state">Nenhum gasto neste mês.</div>
           </article>
-          <article class="panel">
-            <div class="panel-head"><h3>Resumo</h3></div>
-            <div id="summaryList" class="summary-list"></div>
+
+
+          <article class="card">
+
+            <span>
+              Dinheiro guardado
+            </span>
+
+            <strong id="saved">
+              R$ 0,00
+            </strong>
+
+            <small>
+              Reserva atual
+            </small>
+
           </article>
+
+
+          <article class="card">
+
+            <span>
+              Entradas no mês
+            </span>
+
+            <strong id="income">
+              R$ 0,00
+            </strong>
+
+            <small>
+              Dinheiro recebido
+            </small>
+
+          </article>
+
+
+          <article class="card">
+
+            <span>
+              Gastos no mês
+            </span>
+
+            <strong id="expenses">
+              R$ 0,00
+            </strong>
+
+            <small>
+              Despesas registradas
+            </small>
+
+          </article>
+
         </div>
 
-        <article class="panel">
-          <div class="panel-head"><h3>Últimas movimentações</h3><button class="link-btn" data-page-link="transactions">Ver todas</button></div>
-          <div id="recentTransactions" class="transaction-list"></div>
-        </article>
-      </section>
 
-      <section id="page-transactions" class="page hidden">
-        <div class="toolbar">
-          <input id="searchTransactions" type="search" placeholder="Pesquisar descrição...">
-          <select id="typeFilter"><option value="">Todos</option><option value="income">Entradas</option><option value="expense">Gastos</option><option value="save">Guardar</option><option value="withdraw">Retirar da reserva</option></select>
-          <select id="categoryFilter"><option value="">Todas as categorias</option></select>
-        </div>
-        <article class="panel">
-          <div class="panel-head"><h3>Histórico</h3><span id="transactionCount" class="muted"></span></div>
-          <div id="allTransactions" class="transaction-list"></div>
-        </article>
-      </section>
+        <!-- GRÁFICO -->
+        <div class="card chart-card">
 
-      <section id="page-goals" class="page hidden">
-        <div class="section-actions"><button id="newGoalBtn" class="primary">+ Nova meta</button></div>
-        <div id="goalsGrid" class="goals-grid"></div>
-      </section>
+          <div class="card-header">
 
-      <section id="page-settings" class="page hidden">
-        <div class="grid-2">
-          <article class="panel">
-            <div class="panel-head"><h3>Gastos fixos</h3><button id="newFixedBtn" class="secondary">+ Adicionar</button></div>
-            <div id="fixedList"></div>
-          </article>
-          <article class="panel">
-            <div class="panel-head"><h3>Categorias</h3><button id="newCategoryBtn" class="secondary">+ Adicionar</button></div>
-            <div id="categoryList"></div>
-          </article>
-        </div>
-        <article class="panel">
-          <div class="panel-head"><h3>Conta</h3></div>
-          <p id="accountInfo" class="muted"></p>
-          <div class="settings-actions">
-            <button id="changePasswordBtn" class="secondary">Enviar e-mail para trocar senha</button>
-            <button id="deleteDataBtn" class="danger-btn">Apagar meus dados</button>
+            <div>
+
+              <h3>
+                Gastos por categoria
+              </h3>
+
+              <p>
+                Veja onde seu dinheiro está sendo gasto
+              </p>
+
+            </div>
+
           </div>
-        </article>
-      </section>
-    </main>
-  </div>
 
-  <div id="transactionModal" class="modal hidden">
-    <div class="modal-card">
-      <div class="modal-head"><h3 id="transactionModalTitle">Adicionar movimentação</h3><button class="close-modal">×</button></div>
-      <form id="transactionForm">
-        <input id="transactionId" type="hidden">
-        <div class="type-buttons">
-          <button type="button" class="type-btn active" data-type="expense">Gasto</button>
-          <button type="button" class="type-btn" data-type="income">Entrada</button>
-          <button type="button" class="type-btn" data-type="save">Guardar</button>
-          <button type="button" class="type-btn" data-type="withdraw">Retirar reserva</button>
+
+          <div class="chart-container">
+
+            <canvas
+              id="expensesChart"
+            ></canvas>
+
+          </div>
+
         </div>
-        <input id="transactionType" type="hidden" value="expense">
-        <label>Valor<input id="transactionAmount" type="number" min="0.01" step="0.01" placeholder="0,00" required></label>
-        <label>Descrição<input id="transactionDescription" type="text" placeholder="Ex.: Mercado" required></label>
-        <label id="transactionCategoryWrap">Categoria<select id="transactionCategory"></select></label>
-        <label>Data<input id="transactionDate" type="date" required></label>
-        <label>Forma de pagamento <select id="paymentMethod"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>Transferência</option><option>Outro</option></select></label>
-        <label>Observação <textarea id="transactionNote" rows="2" placeholder="Opcional"></textarea></label>
-        <button class="primary full" type="submit">Salvar</button>
-      </form>
-    </div>
+
+
+        <!-- RESUMOS -->
+        <div class="grid-2">
+
+
+          <article class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Gastos por categoria
+              </h3>
+
+            </div>
+
+
+            <div
+              id="categoryChart"
+              class="bar-chart empty-state"
+            >
+              Nenhum gasto neste mês.
+            </div>
+
+          </article>
+
+
+          <article class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Resumo
+              </h3>
+
+            </div>
+
+
+            <div
+              id="summaryList"
+              class="summary-list"
+            ></div>
+
+          </article>
+
+
+        </div>
+
+
+        <!-- ÚLTIMAS MOVIMENTAÇÕES -->
+        <article class="panel">
+
+          <div class="panel-head">
+
+            <h3>
+              Últimas movimentações
+            </h3>
+
+            <button
+              class="link-btn"
+              data-page-link="transactions"
+              type="button"
+            >
+              Ver todas
+            </button>
+
+          </div>
+
+
+          <div
+            id="recentTransactions"
+            class="transaction-list"
+          ></div>
+
+        </article>
+
+      </section>
+
+
+      <!-- =========================
+           MOVIMENTAÇÕES
+      ========================== -->
+      <section
+        id="page-transactions"
+        class="page hidden"
+      >
+
+        <div class="toolbar">
+
+          <input
+            id="searchTransactions"
+            type="search"
+            placeholder="Pesquisar descrição..."
+          >
+
+
+          <select id="typeFilter">
+
+            <option value="">
+              Todos
+            </option>
+
+            <option value="income">
+              Entradas
+            </option>
+
+            <option value="expense">
+              Gastos
+            </option>
+
+            <option value="save">
+              Guardar
+            </option>
+
+            <option value="withdraw">
+              Retirar da reserva
+            </option>
+
+          </select>
+
+
+          <select id="categoryFilter">
+
+            <option value="">
+              Todas as categorias
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <article class="panel">
+
+          <div class="panel-head">
+
+            <h3>
+              Histórico
+            </h3>
+
+            <span
+              id="transactionCount"
+              class="muted"
+            ></span>
+
+          </div>
+
+
+          <div
+            id="allTransactions"
+            class="transaction-list"
+          ></div>
+
+        </article>
+
+      </section>
+
+
+      <!-- =========================
+           METAS
+      ========================== -->
+      <section
+        id="page-goals"
+        class="page hidden"
+      >
+
+        <div class="section-actions">
+
+          <button
+            id="newGoalBtn"
+            class="primary"
+            type="button"
+          >
+            + Nova meta
+          </button>
+
+        </div>
+
+
+        <div
+          id="goalsGrid"
+          class="goals-grid"
+        ></div>
+
+      </section>
+
+
+      <!-- =========================
+           TAREFAS
+      ========================== -->
+      <section
+        id="page-tasks"
+        class="page hidden"
+      >
+
+        <div class="tasks-header">
+
+          <div>
+
+            <h3>
+              Minhas tarefas
+            </h3>
+
+            <p class="muted">
+              Organize suas atividades e não esqueça
+              do que precisa fazer.
+            </p>
+
+          </div>
+
+
+          <button
+            id="newTaskBtn"
+            class="primary"
+            type="button"
+          >
+            + Nova tarefa
+          </button>
+
+        </div>
+
+
+        <!-- FILTROS -->
+        <div class="task-filters">
+
+          <button
+            class="task-filter active"
+            data-task-filter="today"
+            type="button"
+          >
+            Hoje
+          </button>
+
+
+          <button
+            class="task-filter"
+            data-task-filter="tomorrow"
+            type="button"
+          >
+            Amanhã
+          </button>
+
+
+          <button
+            class="task-filter"
+            data-task-filter="upcoming"
+            type="button"
+          >
+            Próximas
+          </button>
+
+
+          <button
+            class="task-filter"
+            data-task-filter="completed"
+            type="button"
+          >
+            Concluídas
+          </button>
+
+        </div>
+
+
+        <!-- LISTA DE TAREFAS -->
+        <article class="panel tasks-panel">
+
+          <div class="panel-head">
+
+            <div>
+
+              <h3>
+                Suas tarefas
+              </h3>
+
+              <span class="muted">
+                Veja o que você precisa fazer.
+              </span>
+
+            </div>
+
+
+            <span
+              id="taskCount"
+              class="muted"
+            >
+              0 tarefas
+            </span>
+
+          </div>
+
+
+          <div
+            id="tasksList"
+            class="tasks-list"
+          >
+
+            <div class="tasks-empty">
+
+              <div class="tasks-empty-icon">
+                ✓
+              </div>
+
+
+              <h3>
+                Nenhuma tarefa ainda
+              </h3>
+
+
+              <p class="muted">
+                Adicione uma tarefa para começar
+                a organizar seu dia.
+              </p>
+
+
+              <button
+                id="emptyNewTaskBtn"
+                class="secondary"
+                type="button"
+              >
+                + Adicionar primeira tarefa
+              </button>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <!-- =========================
+           CONFIGURAÇÕES
+      ========================== -->
+      <section
+        id="page-settings"
+        class="page hidden"
+      >
+
+        <div class="grid-2">
+
+
+          <!-- GASTOS FIXOS -->
+          <article class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Gastos fixos
+              </h3>
+
+              <button
+                id="newFixedBtn"
+                class="secondary"
+                type="button"
+              >
+                + Adicionar
+              </button>
+
+            </div>
+
+
+            <div id="fixedList"></div>
+
+          </article>
+
+
+          <!-- CATEGORIAS -->
+          <article class="panel">
+
+            <div class="panel-head">
+
+              <h3>
+                Categorias
+              </h3>
+
+              <button
+                id="newCategoryBtn"
+                class="secondary"
+                type="button"
+              >
+                + Adicionar
+              </button>
+
+            </div>
+
+
+            <div id="categoryList"></div>
+
+          </article>
+
+        </div>
+
+
+        <!-- CONTA -->
+        <article class="panel">
+
+          <div class="panel-head">
+
+            <h3>
+              Conta
+            </h3>
+
+          </div>
+
+
+          <p
+            id="accountInfo"
+            class="muted"
+          ></p>
+
+
+          <div class="settings-actions">
+
+            <button
+              id="changePasswordBtn"
+              class="secondary"
+              type="button"
+            >
+              Enviar e-mail para trocar senha
+            </button>
+
+
+            <button
+              id="deleteDataBtn"
+              class="danger-btn"
+              type="button"
+            >
+              Apagar meus dados
+            </button>
+
+          </div>
+
+        </article>
+
+      </section>
+
+    </main>
+
   </div>
 
-  <div id="goalModal" class="modal hidden">
+
+  <!-- =========================
+       MODAL - MOVIMENTAÇÃO
+  ========================== -->
+  <div
+    id="transactionModal"
+    class="modal hidden"
+  >
+
     <div class="modal-card">
-      <div class="modal-head"><h3>Nova meta</h3><button class="close-modal">×</button></div>
+
+      <div class="modal-head">
+
+        <h3 id="transactionModalTitle">
+          Adicionar movimentação
+        </h3>
+
+        <button
+          class="close-modal"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form id="transactionForm">
+
+        <input
+          id="transactionId"
+          type="hidden"
+        >
+
+
+        <div class="type-buttons">
+
+          <button
+            type="button"
+            class="type-btn active"
+            data-type="expense"
+          >
+            Gasto
+          </button>
+
+
+          <button
+            type="button"
+            class="type-btn"
+            data-type="income"
+          >
+            Entrada
+          </button>
+
+
+          <button
+            type="button"
+            class="type-btn"
+            data-type="save"
+          >
+            Guardar
+          </button>
+
+
+          <button
+            type="button"
+            class="type-btn"
+            data-type="withdraw"
+          >
+            Retirar reserva
+          </button>
+
+        </div>
+
+
+        <input
+          id="transactionType"
+          type="hidden"
+          value="expense"
+        >
+
+
+        <label>
+          Valor
+
+          <input
+            id="transactionAmount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="0,00"
+            required
+          >
+        </label>
+
+
+        <label>
+          Descrição
+
+          <input
+            id="transactionDescription"
+            type="text"
+            placeholder="Ex.: Mercado"
+            required
+          >
+        </label>
+
+
+        <label id="transactionCategoryWrap">
+          Categoria
+
+          <select id="transactionCategory"></select>
+        </label>
+
+
+        <label>
+          Data
+
+          <input
+            id="transactionDate"
+            type="date"
+            required
+          >
+        </label>
+
+
+        <label>
+          Forma de pagamento
+
+          <select id="paymentMethod">
+
+            <option>
+              Pix
+            </option>
+
+            <option>
+              Dinheiro
+            </option>
+
+            <option>
+              Cartão de débito
+            </option>
+
+            <option>
+              Cartão de crédito
+            </option>
+
+            <option>
+              Transferência
+            </option>
+
+            <option>
+              Outro
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+          Observação
+
+          <textarea
+            id="transactionNote"
+            rows="2"
+            placeholder="Opcional"
+          ></textarea>
+
+        </label>
+
+
+        <button
+          class="primary full"
+          type="submit"
+        >
+          Salvar
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       MODAL - META
+  ========================== -->
+  <div
+    id="goalModal"
+    class="modal hidden"
+  >
+
+    <div class="modal-card">
+
+      <div class="modal-head">
+
+        <h3>
+          Nova meta
+        </h3>
+
+        <button
+          class="close-modal"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+
       <form id="goalForm">
-        <label>Nome da meta<input id="goalName" required placeholder="Ex.: Comprar celular"></label>
-        <label>Valor da meta<input id="goalTarget" type="number" min="0.01" step="0.01" required placeholder="1000"></label>
-        <label>Valor já guardado para esta meta<input id="goalCurrent" type="number" min="0" step="0.01" value="0"></label>
-        <label>Prazo <input id="goalDeadline" type="date"></label>
-        <button class="primary full" type="submit">Criar meta</button>
+
+        <label>
+          Nome da meta
+
+          <input
+            id="goalName"
+            required
+            placeholder="Ex.: Comprar celular"
+          >
+        </label>
+
+
+        <label>
+          Valor da meta
+
+          <input
+            id="goalTarget"
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            placeholder="1000"
+          >
+        </label>
+
+
+        <label>
+          Valor já guardado para esta meta
+
+          <input
+            id="goalCurrent"
+            type="number"
+            min="0"
+            step="0.01"
+            value="0"
+          >
+        </label>
+
+
+        <label>
+          Prazo
+
+          <input
+            id="goalDeadline"
+            type="date"
+          >
+        </label>
+
+
+        <button
+          class="primary full"
+          type="submit"
+        >
+          Criar meta
+        </button>
+
       </form>
+
     </div>
+
   </div>
 
-  <div id="simpleModal" class="modal hidden">
+
+  <!-- =========================
+       MODAL - TAREFA
+  ========================== -->
+  <div
+    id="taskModal"
+    class="modal hidden"
+  >
+
     <div class="modal-card">
-      <div class="modal-head"><h3 id="simpleModalTitle"></h3><button class="close-modal">×</button></div>
-      <form id="simpleForm">
-        <label id="simpleNameLabel">Nome<input id="simpleName" required></label>
-        <label id="simpleValueLabel" class="hidden">Valor<input id="simpleValue" type="number" min="0.01" step="0.01"></label>
-        <label id="simpleDayLabel" class="hidden">Dia do mês<input id="simpleDay" type="number" min="1" max="31"></label>
-        <button class="primary full" type="submit">Salvar</button>
+
+      <div class="modal-head">
+
+        <div>
+
+          <h3>
+            Nova tarefa
+          </h3>
+
+          <p class="muted">
+            Adicione algo que você precisa fazer.
+          </p>
+
+        </div>
+
+
+        <button
+          class="close-modal"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form id="taskForm">
+
+
+        <label>
+          O que você precisa fazer?
+
+          <input
+            id="taskTitle"
+            type="text"
+            placeholder="Ex.: Fazer trabalho da escola"
+            required
+          >
+        </label>
+
+
+        <div class="task-form-grid">
+
+          <label>
+            Data
+
+            <input
+              id="taskDate"
+              type="date"
+              required
+            >
+          </label>
+
+
+          <label>
+            Horário
+
+            <input
+              id="taskTime"
+              type="time"
+            >
+          </label>
+
+        </div>
+
+
+        <label>
+          Prioridade
+
+          <select id="taskPriority">
+
+            <option value="low">
+              Baixa
+            </option>
+
+            <option
+              value="medium"
+              selected
+            >
+              Média
+            </option>
+
+            <option value="high">
+              Alta
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+          Observação
+
+          <textarea
+            id="taskNote"
+            rows="3"
+            placeholder="Alguma informação importante? (opcional)"
+          ></textarea>
+
+        </label>
+
+
+        <button
+          class="primary full"
+          type="submit"
+        >
+          Adicionar tarefa
+        </button>
+
       </form>
+
     </div>
+
   </div>
+
+
+  <!-- =========================
+       MODAL SIMPLES
+  ========================== -->
+  <div
+    id="simpleModal"
+    class="modal hidden"
+  >
+
+    <div class="modal-card">
+
+      <div class="modal-head">
+
+        <h3 id="simpleModalTitle"></h3>
+
+        <button
+          class="close-modal"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form id="simpleForm">
+
+        <label id="simpleNameLabel">
+
+          Nome
+
+          <input
+            id="simpleName"
+            required
+          >
+
+        </label>
+
+
+        <label
+          id="simpleValueLabel"
+          class="hidden"
+        >
+
+          Valor
+
+          <input
+            id="simpleValue"
+            type="number"
+            min="0.01"
+            step="0.01"
+          >
+
+        </label>
+
+
+        <label
+          id="simpleDayLabel"
+          class="hidden"
+        >
+
+          Dia do mês
+
+          <input
+            id="simpleDay"
+            type="number"
+            min="1"
+            max="31"
+          >
+
+        </label>
+
+
+        <button
+          class="primary full"
+          type="submit"
+        >
+          Salvar
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
 </body>
 </html>
