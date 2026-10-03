@@ -468,6 +468,8 @@ document.querySelectorAll("[data-home]").forEach(button=>{
 
 
 
+
+
 document.querySelectorAll("[data-page-link]").forEach(b=>b.onclick=()=>goPage(b.dataset.pageLink));
 $("quickAdd").onclick=()=>openTransaction();
 $("newGoalBtn").onclick=()=>openModal("goalModal");
