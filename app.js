@@ -173,17 +173,6 @@ async function seedCategories(){
   await batch.commit();
 }
 
-.home-view{
-  position:fixed;
-  inset:0;
-  background:var(--bg);
-  display:grid;
-  place-items:center;
-  padding:30px;
-  z-index:40;
-  overflow:auto;
-}
-
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault(); $("authMessage").textContent="Entrando...";
   try{await signInWithEmailAndPassword(auth,$("loginEmail").value,$("loginPassword").value);}
