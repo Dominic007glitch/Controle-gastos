@@ -175,18 +175,62 @@ async function seedCategories(){
 
 onAuthStateChanged(auth, async u=>{
   setLoading(true);
+
   if(u){
-    user=u; await ensureProfile();
-    $("authView").classList.add("hidden"); $("appView").classList.remove("hidden");
-    $("userMini").innerHTML=`<strong>${escapeHtml(u.displayName||"Usuário")}</strong><small>${escapeHtml(u.email||"")}</small>`;
+
+    user=u;
+
+    await ensureProfile();
+
+    $("authView").classList.add("hidden");
+    $("appView").classList.remove("hidden");
+
+    $("userMini").innerHTML=`
+      <strong>${escapeHtml(u.displayName||"Usuário")}</strong>
+      <small>${escapeHtml(u.email||"")}</small>
+    `;
+
     $("welcomeText").textContent=`Olá, ${u.displayName||"usuário"}!`;
+
     $("accountInfo").textContent=`Conta: ${u.email}`;
-    if(!$("monthFilter").value) $("monthFilter").value=selectedMonth;
+
+    if(!$("monthFilter").value){
+      $("monthFilter").value=selectedMonth;
+    }
+
+    /*
+      Depois do login, mostra a tela de escolha.
+    */
+    $("homeView").classList.remove("hidden");
+
+    /*
+      Começa sem nenhuma área aberta.
+    */
+    document.querySelectorAll(".page").forEach(page=>{
+      page.classList.add("hidden");
+    });
+
     listenData();
-  } else {
-    user=null; transactions=[]; goals=[]; categories=[]; fixedExpenses=[];
-    $("appView").classList.add("hidden"); $("authView").classList.remove("hidden");
+
+  }else{
+
+    user=null;
+
+    transactions=[];
+    goals=[];
+    categories=[];
+    fixedExpenses=[];
+
+    $("appView").classList.add("hidden");
+    $("authView").classList.remove("hidden");
+
+    /*
+      Garante que a tela inicial fique escondida
+      quando o usuário sair.
+    */
+    $("homeView").classList.add("hidden");
   }
+
   setLoading(false);
 });
 
