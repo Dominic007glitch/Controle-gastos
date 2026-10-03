@@ -19,15 +19,6 @@
       <h1>Meu Controle</h1>
       <p class="muted">Seu dinheiro organizado em um só lugar.</p>
 
-
-
-
-<button class="nav-item home-nav" data-home>
-  ← <span>Início</span>
-</button>
-
-      
-
       <div class="auth-tabs">
         <button class="tab active" data-auth-tab="login">Entrar</button>
         <button class="tab" data-auth-tab="register">Criar conta</button>
@@ -51,61 +42,17 @@
   </section>
 
   <div id="appView" class="app hidden">
-
-    <!-- TELA DE ESCOLHA DE ÁREA -->
-    <section id="homeView" class="home-view hidden">
-      <div class="home-content">
-        <div class="brand-mark home-brand">R$</div>
-        <h1>O que você deseja organizar?</h1>
-        <p class="muted">Escolha uma área para começar.</p>
-
-        <div class="home-options">
-          <button class="home-option" data-module="finance" type="button">
-            <div class="home-option-icon finance-icon">R$</div>
-            <div class="home-option-content">
-              <h2>Minha vida financeira</h2>
-              <p>Organize seu dinheiro, acompanhe seus gastos, entradas e metas.</p>
-              <span>Acessar →</span>
-            </div>
-          </button>
-
-          <button class="home-option" data-module="tasks" type="button">
-            <div class="home-option-icon tasks-icon">✓</div>
-            <div class="home-option-content">
-              <h2>Minhas tarefas</h2>
-              <p>Organize suas atividades, compromissos e tudo o que você precisa fazer.</p>
-              <span>Acessar →</span>
-            </div>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- MENU LATERAL -->
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-mark small">R$</div>
-        <span>Meu Controle</span>
-      </div>
-
+      <div class="sidebar-brand"><div class="brand-mark small">R$</div><span>Meu Controle</span></div>
       <nav>
-        <button class="nav-item home-nav" data-home type="button">← <span>Mudar de área</span></button>
-
-        <div data-module-nav="finance">
-          <button class="nav-item active" data-page="dashboard" type="button">▦ <span>Dashboard</span></button>
-          <button class="nav-item" data-page="transactions" type="button">↕ <span>Movimentações</span></button>
-          <button class="nav-item" data-page="goals" type="button">◎ <span>Metas</span></button>
-          <button class="nav-item" data-page="settings" type="button">⚙ <span>Configurações</span></button>
-        </div>
-
-        <div data-module-nav="tasks">
-          <button class="nav-item active" data-page="tasks" type="button">✓ <span>Minhas tarefas</span></button>
-        </div>
+        <button class="nav-item active" data-page="dashboard">▦ <span>Dashboard</span></button>
+        <button class="nav-item" data-page="transactions">↕ <span>Movimentações</span></button>
+        <button class="nav-item" data-page="goals">◎ <span>Metas</span></button>
+        <button class="nav-item" data-page="settings">⚙ <span>Configurações</span></button>
       </nav>
-
       <div class="sidebar-bottom">
         <div id="userMini" class="user-mini"></div>
-        <button id="logoutBtn" class="nav-item danger" type="button">↪ <span>Sair</span></button>
+        <button id="logoutBtn" class="nav-item danger">↪ <span>Sair</span></button>
       </div>
     </aside>
 
@@ -200,42 +147,6 @@
         <div id="goalsGrid" class="goals-grid"></div>
       </section>
 
-      <section id="page-tasks" class="page hidden">
-        <div class="tasks-header">
-          <div>
-            <h3>Minhas tarefas</h3>
-            <p class="muted">Organize suas atividades e não esqueça do que precisa fazer.</p>
-          </div>
-          <button id="newTaskBtn" class="primary" type="button">+ Nova tarefa</button>
-        </div>
-
-        <div class="task-filters">
-          <button class="task-filter active" data-task-filter="today" type="button">Hoje</button>
-          <button class="task-filter" data-task-filter="tomorrow" type="button">Amanhã</button>
-          <button class="task-filter" data-task-filter="upcoming" type="button">Próximas</button>
-          <button class="task-filter" data-task-filter="completed" type="button">Concluídas</button>
-        </div>
-
-        <article class="panel tasks-panel">
-          <div class="panel-head">
-            <div>
-              <h3>Suas tarefas</h3>
-              <span class="muted">Veja o que você precisa fazer.</span>
-            </div>
-            <span id="taskCount" class="muted">0 tarefas</span>
-          </div>
-
-          <div id="tasksList" class="tasks-list">
-            <div class="tasks-empty">
-              <div class="tasks-empty-icon">✓</div>
-              <h3>Nenhuma tarefa aqui</h3>
-              <p class="muted">Adicione uma tarefa para começar a organizar seu dia.</p>
-              <button id="emptyNewTaskBtn" class="secondary" type="button">+ Adicionar tarefa</button>
-            </div>
-          </div>
-        </article>
-      </section>
-
       <section id="page-settings" class="page hidden">
         <div class="grid-2">
           <article class="panel">
@@ -291,47 +202,6 @@
         <label>Valor já guardado para esta meta<input id="goalCurrent" type="number" min="0" step="0.01" value="0"></label>
         <label>Prazo <input id="goalDeadline" type="date"></label>
         <button class="primary full" type="submit">Criar meta</button>
-      </form>
-    </div>
-  </div>
-
-  <div id="taskModal" class="modal hidden">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div>
-          <h3>Nova tarefa</h3>
-          <p class="muted">Adicione algo que você precisa fazer.</p>
-        </div>
-        <button class="close-modal" type="button">×</button>
-      </div>
-
-      <form id="taskForm">
-        <label>O que você precisa fazer?
-          <input id="taskTitle" type="text" placeholder="Ex.: Fazer trabalho da escola" required>
-        </label>
-
-        <div class="task-form-grid">
-          <label>Data
-            <input id="taskDate" type="date" required>
-          </label>
-          <label>Horário
-            <input id="taskTime" type="time">
-          </label>
-        </div>
-
-        <label>Prioridade
-          <select id="taskPriority">
-            <option value="low">Baixa</option>
-            <option value="medium" selected>Média</option>
-            <option value="high">Alta</option>
-          </select>
-        </label>
-
-        <label>Observação
-          <textarea id="taskNote" rows="3" placeholder="Alguma informação importante? (opcional)"></textarea>
-        </label>
-
-        <button class="primary full" type="submit">Adicionar tarefa</button>
       </form>
     </div>
   </div>
