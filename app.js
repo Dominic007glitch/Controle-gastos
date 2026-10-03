@@ -502,6 +502,22 @@ document.querySelectorAll("[data-module]").forEach(button=>{
 
 
 document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>goPage(b.dataset.page));
+
+
+
+document.querySelectorAll("[data-home]").forEach(button=>{
+
+  button.onclick=()=>{
+
+    $("homeView").classList.remove("hidden");
+
+  };
+
+});
+
+
+
+
 document.querySelectorAll("[data-page-link]").forEach(b=>b.onclick=()=>goPage(b.dataset.pageLink));
 $("quickAdd").onclick=()=>openTransaction();
 $("newGoalBtn").onclick=()=>openModal("goalModal");
